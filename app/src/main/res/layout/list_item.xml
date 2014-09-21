@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <!-- Name Label -->
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#43bd00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingTop="6dip"
+            android:paddingBottom="2dip" />
+        <!-- Description label -->
+        <TextView
+            android:id="@+id/ingredients"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#acacac"
+            android:paddingBottom="2dip" />
+
+        <!-- Cost Label -->
+        <TextView
+            android:id="@+id/url"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#5d5d5d"
+            android:gravity="start"
+            android:textStyle="bold"
+            android:paddingBottom="2dip" />
+
+        <TextView
+            android:id="@+id/matches"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#ff00c600"
+            android:paddingBottom="2dip" />
+
+        <TextView
+            android:id="@+id/mismatches"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#ff0000"
+            android:paddingBottom="2dip">
+        </TextView>
+
+    </LinearLayout>
+
+</LinearLayout>
