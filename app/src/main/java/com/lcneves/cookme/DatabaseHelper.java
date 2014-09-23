@@ -87,60 +87,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(recipesTable, null, cv);
     }
 
-    public void searchRecipes(String[] selIngredients) {
-        if (selIngredients.length == 0)
-            return;
-
-        SQLiteDatabase db=this.getWritableDatabase();
-        String whereCondition = recIngredients+" LIKE \'%" + selIngredients[0] + "%\'";
-        for (int i = 1; i < selIngredients.length; i++) {
-            whereCondition = whereCondition + " OR " + recIngredients + " LIKE \'%" + selIngredients[i] + "%\'";
-        }
-        String insertCommand = "INSERT INTO "+resultsTable+" ("+resName+","+resIngredients+","+resURL+") SELECT "+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" WHERE "+whereCondition;
-        db.execSQL("DROP TABLE IF EXISTS "+resultsTable);
-        db.execSQL("CREATE TABLE "+resultsTable+" ("+resID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+resName+" TEXT, "+resIngredients+" TEXT, "+resURL+" TEXT, "+resMatches+" TEXT, "+resMismatches+" TEXT, "+resMatchCount+" INTEGER, "+resMismatchCount+" INTEGER)");
-        db.execSQL(insertCommand);
-
-        String[] ingredientsArray = {resIngredients};
-        Cursor cursor = null;
-        try {
-            cursor = db.query(resultsTable, ingredientsArray, null, null, null, null, null);
-            db.beginTransaction();
-            int rowCount = cursor.getCount();
-            int columnIndex = cursor.getColumnIndexOrThrow(resIngredients);
-            cursor.moveToFirst();
-            for (int i = 1; i <= rowCount; i++) {
-                String matches = "Matches: ";
-                String misMatches = "Does not match: ";
-                int count = 0;
-                int misCount = 0;
-                for (int j = 0; j < selIngredients.length; j++) {
-                    String content = cursor.getString(columnIndex);
-                    if (content.toLowerCase(Locale.ENGLISH).contains(selIngredients[j].toLowerCase(Locale.ENGLISH))) {
-                        matches = matches + selIngredients[j] + " ";
-                        count++;
-                    } else {
-                        misMatches = misMatches + selIngredients[j] + " ";
-                        misCount++;
-                    }
-                }
-                ContentValues cv=new ContentValues();
-                cv.put(resMatches, matches);
-                cv.put(resMismatches, misMatches);
-                cv.put(resMatchCount, count);
-                cv.put(resMismatchCount, misCount);
-                db.update(resultsTable, cv, resID + " = " + i, null);
-                cv.clear();
-                cursor.moveToNext();
-            }
-            db.setTransactionSuccessful();
-        } finally {
-            cursor.close();
-            db.endTransaction();
-        }
-        db.close();
-    }
-
     public Cursor displayResults() {
         SQLiteDatabase db=this.getWritableDatabase();
         Cursor resultsCursor = db.query(resultsTable, new String[] {resID, resName, resIngredients, resURL, resMatches, resMismatches, resMismatchCount}, null, null, null, null, resMismatchCount);
@@ -150,6 +96,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         db.close();
         return resultsCursor;
+    }
+
+    public String getUrl(long id) {
+        String url = null;
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.query(resultsTable, new String[]{resURL}, resID+" = "+id, null, null, null, null);
+        if (cursor.moveToFirst()) {
+            url = cursor.getString(cursor.getColumnIndex(resURL));
+        }
+        db.close();
+        return url;
     }
 
     public Cursor displayIngredients() {
@@ -200,16 +157,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(shoppingTable, shoID+" = "+rowID, null);
         db.close();
-    }
-
-    public Cursor displayRecipes() {
-        SQLiteDatabase db=this.getWritableDatabase();
-        Cursor resultsCursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, null, null, null, null, null);
-
-            resultsCursor.moveToFirst();
-
-        db.close();
-        return resultsCursor;
     }
 
     public boolean verifyRecipesTable() {

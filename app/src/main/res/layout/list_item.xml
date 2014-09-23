@@ -8,48 +8,46 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-        <!-- Name Label -->
-        <TextView
-            android:id="@+id/name"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#43bd00"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:paddingTop="6dip"
-            android:paddingBottom="2dip" />
-        <!-- Description label -->
-        <TextView
-            android:id="@+id/ingredients"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#acacac"
-            android:paddingBottom="2dip" />
 
-        <!-- Cost Label -->
         <TextView
+            style="@android:style/TextAppearance.Holo.SearchResult.Title"
+            android:id="@+id/name"
+            android:text="Recipe name"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#ffe05300"
+            android:paddingTop="6dip"/>
+        <TextView
+            style="@android:style/TextAppearance.Holo.SearchResult.Subtitle"
             android:id="@+id/url"
+            android:text="http://www.example.com/mydeliciousrecipe"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textColor="#5d5d5d"
             android:gravity="start"
-            android:textStyle="bold"
-            android:paddingBottom="2dip" />
-
+            android:paddingBottom="4dip" />
         <TextView
+            style="@android:style/TextAppearance.Holo.Small"
             android:id="@+id/matches"
+            android:text="Matches: Nightshade Crimson root Eye of the Tiger"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textColor="#ff00c600"
-            android:paddingBottom="2dip" />
-
+            android:textColor="#8000c600" />
         <TextView
+            style="@android:style/TextAppearance.Holo.Small"
             android:id="@+id/mismatches"
+            android:text="Doesn't match: Nirnroot Fire salts"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textColor="#ff0000"
+            android:textColor="#7fff0000"
+            android:includeFontPadding="false"
             android:paddingBottom="2dip">
         </TextView>
+        <TextView
+            android:id="@+id/ingredients"
+            android:text="Ingredients: blah, blah, blah..."
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 

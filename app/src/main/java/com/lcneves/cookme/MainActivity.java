@@ -242,8 +242,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     }
 
-    public class Debug extends Exception {
-        public Debug(String message){
+    public static class Debugger extends Exception {
+        public Debugger(String message){
             super(message);
         }
     }

@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 
-public class SearchResults extends ListActivity {
+public class SearchResults extends Activity {
 
 
     Context context = SearchResults.this;
@@ -47,7 +47,6 @@ public class SearchResults extends ListActivity {
     static final String resMatchCount="MatchCount";
     static final String resMismatchCount="MismatchCount";
     int rowCount = 0;
-    private ListActivity activity = SearchResults.this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,19 +125,25 @@ public class SearchResults extends ListActivity {
                 cursor.moveToFirst();
                 for (int i = 1; i <= rowCount; i++) {
                     publishProgress((int) (i));
-                    String matches = "Matches: ";
-                    String misMatches = "Does not match: ";
+                    String matches = "Uses: ";
+                    String misMatches = "Doesn't use: ";
                     int count = 0;
                     int misCount = 0;
                     for (int j = 0; j < selIngredients.length; j++) {
                         String content = cursor.getString(columnIndex);
                         if (content.toLowerCase(Locale.ENGLISH).contains(selIngredients[j].toLowerCase(Locale.ENGLISH))) {
-                            matches = matches + selIngredients[j] + " ";
+                            matches = matches + selIngredients[j] + ", ";
                             count++;
                         } else {
-                            misMatches = misMatches + selIngredients[j] + " ";
+                            misMatches = misMatches + selIngredients[j] + ", ";
                             misCount++;
                         }
+                    }
+                    matches = matches.substring(0, matches.length()-2);
+                    if(misMatches.length() == 13) {
+                        misMatches = "";
+                    } else {
+                        misMatches = misMatches.substring(0, misMatches.length()-2);
                     }
                     ContentValues cv=new ContentValues();
                     cv.put(resMatches, matches);
@@ -184,19 +189,8 @@ public class SearchResults extends ListActivity {
         protected void onPostExecute(String result) {
             mWakeLock.release();
             mProgressDialog.dismiss();
-//          Context context = activity;
-            DatabaseHelper database = new DatabaseHelper(SearchResults.this);
-            SQLiteDatabase db = database.getWritableDatabase();
-            Cursor cursor = database.displayResults();
-            //	Cursor cursor = database.displayRecipes();
-
-            SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity, R.layout.list_item, cursor, new String[] { DatabaseHelper.resName, DatabaseHelper.resIngredients, DatabaseHelper.resURL, DatabaseHelper.resMatches, DatabaseHelper.resMismatches }, new int[] { R.id.name, R.id.ingredients, R.id.url, R.id.matches, R.id.mismatches }, 0);
-            //	SimpleCursorAdapter adapter = new SimpleCursorAdapter(context, R.layout.list_item, cursor, new String[] { DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL }, new int[] { R.id.name, R.id.ingredients, R.id.url }, 0);
-
-                setListAdapter(adapter);
-            // select single ListView item
-                lv = getListView();
-
+            Intent intent = new Intent(SearchResults.this, DisplayResults.class);
+            startActivity(intent);
         }
     }
 }
