@@ -52,10 +52,10 @@ public class JSONHelper extends Activity {
     static String fileNameOld = "recipeitems-latest.json";
     static String fileNameNew = "recipeitems-edited.json";
     static String fileNameGz = "recipeitems-latest.json.gz";
-    static String JSONUrl = "http://openrecipes.s3.amazonaws.com/recipeitems-latest.json.gz";
     static File fileOld = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameOld);
     static File fileNew = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameNew);
     static File fileGz = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameGz);
+    static String JSONUrl = "http://openrecipes.s3.amazonaws.com/recipeitems-latest.json.gz";
     private int lineCount = 0;
     Context context = JSONHelper.this;
     ProgressDialog mProgressDialog;

@@ -23,6 +23,7 @@
         <activity
             android:name=".JSONHelper"
             android:label="@string/title_activity_jsonhelper"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -31,6 +32,7 @@
         <activity
             android:name=".SearchResults"
             android:label="@string/title_activity_search_results"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -39,6 +41,7 @@
         <activity
             android:name=".RecipeViewer"
             android:label="@string/title_activity_recipe_viewer"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".DisplayResults" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

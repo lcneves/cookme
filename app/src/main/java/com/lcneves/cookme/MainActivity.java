@@ -4,14 +4,17 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -30,9 +33,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
     static String fileNameOld = "recipeitems-latest.json";
     static File fileOld = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameOld);
     DatabaseHelper db = new DatabaseHelper(this);
-
-    SimpleCursorAdapter adapter;
-    SimpleCursorAdapter adapter2;
+    static boolean databaseCheck = false;
+    MyCursorAdapter adapter;
+    MyCursorAdapter adapter2;
     ListView lv;
     ListView lv2;
     List<String> checkedList = new LinkedList<String>();
@@ -45,17 +48,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
         db.createGroceryList();
         setContentView(R.layout.grocery_list);
 
-        lv = (ListView) findViewById (R.id.listview);
+        lv = (ListView) findViewById(R.id.listview);
         Cursor cursor = db.displayIngredients();
-        adapter = new SimpleCursorAdapter(MainActivity.this, R.layout.ingredients_item, cursor, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.item1 }, 0);
+        adapter = new MyCursorAdapter(MainActivity.this, R.layout.ingredients_item, cursor, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
         lv.setAdapter(adapter);
 
         lv2 = (ListView) findViewById(R.id.listview2);
         Cursor cursor2 = db.displayShopping();
-        adapter2 = new SimpleCursorAdapter(MainActivity.this, R.layout.shopping_item, cursor2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.item1 }, 0);
+        adapter2 = new MyCursorAdapter(MainActivity.this, R.layout.shopping_item, cursor2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
         lv2.setAdapter(adapter2);
 
-        if(db.verifyRecipesTable() == false) {
+        if(db.verifyRecipesTable() == false && databaseCheck == false) {
             dialogDownloadParse.show(getFragmentManager(), "tag");
         }
     }
@@ -181,10 +184,35 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     })
                     .setNegativeButton("No", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
+                            databaseCheck = true;
                         }
                     });
             // Create the AlertDialog object and return it
             return builder.create();
+        }
+    }
+
+    private class MyCursorAdapter extends SimpleCursorAdapter {
+
+        public MyCursorAdapter(Context context, int layout, Cursor c,
+                               String[] from, int[] to, int flags) {
+            super(context, layout, c, from, to, flags);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            //get reference to the row
+            View view = super.getView(position, convertView, parent);
+            CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBox);
+            TextView item = (TextView) view.findViewById(R.id.grocery);
+            String row_item = item.getText().toString();
+            if (checkedList.contains(row_item)) {
+                checkBox.setChecked(true);
+            } else {
+                checkBox.setChecked(false);
+            }
+            return view;
         }
     }
 
@@ -208,6 +236,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
             searchRecipes(checkedList);
             return true;
         }
+        if (id == R.id.action_clearDb) {
+            db.dropRecipes();
+            Intent intent = new Intent(MainActivity.this, JSONHelper.class);
+            startActivity(intent);
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -225,7 +259,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onResume();
     }
 
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -240,11 +273,5 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onDestroy() {
         super.onDestroy();
 
-    }
-
-    public static class Debugger extends Exception {
-        public Debugger(String message){
-            super(message);
-        }
     }
 }

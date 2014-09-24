@@ -15,7 +15,7 @@
         android:checked="false"
         android:clickable="true"
         android:onClick="CheckBoxClick"/>
-    <TextView android:id="@+id/item1"
+    <TextView android:id="@+id/grocery"
         android:text="items"
         android:layout_height="fill_parent"
         android:layout_width="wrap_content"

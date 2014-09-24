@@ -65,6 +65,12 @@ public class RecipeViewer extends Activity {
         if (id == R.id.action_settings) {
             return true;
         }
+        if(id == android.R.id.home) {
+            Intent intent = new Intent(this, DisplayResults.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 }

@@ -9,5 +9,6 @@
     <string name="action_search">Search</string>
     <string name="title_activity_recipe_viewer">Recipe</string>
     <string name="title_activity_display_results">Search results</string>
+    <string name="action_clearDb">Update recipes DB</string>
 
 </resources>

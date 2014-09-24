@@ -54,7 +54,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase arg0, int arg1, int arg2) {
-        // TODO Auto-generated method stub
 
     }
 
@@ -67,24 +66,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void dropRecipes() {
+        SQLiteDatabase db=this.getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS "+recipesTable);
+        db.close();
+    }
+
     public void createGroceryList() {
         SQLiteDatabase db=this.getWritableDatabase();
         db.execSQL("CREATE TABLE IF NOT EXISTS "+ingredientsTable+" ("+ingID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+ingName+" TEXT)");
         db.execSQL("CREATE TABLE IF NOT EXISTS "+shoppingTable+" ("+shoID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+shoName+" TEXT)");
         db.close();
-    }
-
-    public SQLiteDatabase getDB() {
-        return this.getWritableDatabase();
-    }
-
-
-    public void addRecipes(SQLiteDatabase db, String name, String ingredients, String url) {
-        ContentValues cv=new ContentValues();
-        cv.put(recName, name);
-        cv.put(recIngredients, ingredients);
-        cv.put(recURL, url);
-        db.insert(recipesTable, null, cv);
     }
 
     public Cursor displayResults() {
