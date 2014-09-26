@@ -20,6 +20,11 @@ import android.widget.SimpleCursorAdapter;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -47,6 +52,7 @@ public class SearchResults extends Activity {
     static final String resMatchCount="MatchCount";
     static final String resMismatchCount="MismatchCount";
     int rowCount = 0;
+    static ArrayList<HashMap<String, String>> list;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +96,7 @@ public class SearchResults extends Activity {
 
     private class SearchTask extends AsyncTask<String, Integer, String> {
 
+        private String progressMessage;
         private Context context;
         private PowerManager.WakeLock mWakeLock;
 
@@ -109,14 +116,62 @@ public class SearchResults extends Activity {
             for (int i = 1; i < selIngredients.length; i++) {
                 whereCondition = whereCondition + " OR " + recIngredients + " LIKE \'%" + selIngredients[i] + "%\'";
             }
-            String insertCommand = "INSERT INTO "+resultsTable+" ("+resName+","+resIngredients+","+resURL+") SELECT "+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" WHERE "+whereCondition;
+/*            String insertCommand = "INSERT INTO "+resultsTable+" ("+resName+","+resIngredients+","+resURL+") SELECT "+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" WHERE "+whereCondition;
             db.execSQL("DROP TABLE IF EXISTS "+resultsTable);
             db.execSQL("CREATE TABLE "+resultsTable+" ("+resID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+resName+" TEXT, "+resIngredients+" TEXT, "+resURL+" TEXT, "+resMatches+" TEXT, "+resMismatches+" TEXT, "+resMatchCount+" INTEGER, "+resMismatchCount+" INTEGER)");
-            db.execSQL(insertCommand);
+            db.execSQL(insertCommand);*/
 
-            String[] ingredientsArray = {resIngredients};
-            Cursor cursor = null;
-            try {
+            Cursor cursor = db.query(recipesTable, new String[] {recName, recIngredients, recURL}, whereCondition, null, null, null, null);
+            if(cursor.moveToFirst()) {
+                rowCount = cursor.getCount();
+                progressMessage = "Found "+rowCount+" recipes matching your ingredients. Processing...";
+                list = new ArrayList<HashMap<String, String>>();
+                int nameIndex = cursor.getColumnIndexOrThrow(recName);
+                int ingredientsIndex = cursor.getColumnIndexOrThrow(recIngredients);
+                int urlIndex = cursor.getColumnIndexOrThrow(recURL);
+
+                for (int i = 0; i < rowCount; i++) {
+                    publishProgress((int) (i+1));
+                    HashMap<String, String> map = new HashMap<String, String>();
+                    String name = cursor.getString(nameIndex);
+                    String ingredients = cursor.getString(ingredientsIndex);
+                    String url = cursor.getString(urlIndex);
+                    String matches = "Uses: ";
+                    String misMatches = "Doesn't use: ";
+                    int misCount = 0;
+                    for (int j = 0; j < selIngredients.length; j++) {
+                        if (ingredients.toLowerCase(Locale.ENGLISH).contains(selIngredients[j].toLowerCase(Locale.ENGLISH))) {
+                            matches = matches + selIngredients[j] + ", ";
+                        } else {
+                            misMatches = misMatches + selIngredients[j] + ", ";
+                            misCount++;
+                        }
+                    }
+                    matches = matches.substring(0, matches.length() - 2);
+                    if (misMatches.length() == 13) {
+                        misMatches = "";
+                    } else {
+                        misMatches = misMatches.substring(0, misMatches.length() - 2);
+                    }
+                    map.put("_id", Integer.toString(i));
+                    map.put(recName, name);
+                    map.put(recIngredients, ingredients);
+                    map.put(recURL, url);
+                    map.put(resMatches, matches);
+                    map.put(resMismatches, misMatches);
+                    map.put(resMismatchCount, Integer.toString(misCount));
+                    list.add(map);
+                    cursor.moveToNext();
+                }
+                cursor.close();
+                progressMessage = "Sorting...";
+                publishProgress((int) (rowCount));
+                Collections.sort(list, new CustomComparator());
+            }
+
+
+
+ /*           try {
                 cursor = db.query(resultsTable, ingredientsArray, null, null, null, null, null);
                 db.beginTransaction();
                 rowCount = cursor.getCount();
@@ -158,7 +213,7 @@ public class SearchResults extends Activity {
             } finally {
                 cursor.close();
                 db.endTransaction();
-            }
+            }*/
             db.close();
             return null;
         }
@@ -191,6 +246,13 @@ public class SearchResults extends Activity {
             mProgressDialog.dismiss();
             Intent intent = new Intent(SearchResults.this, DisplayResults.class);
             startActivity(intent);
+        }
+    }
+
+    public class CustomComparator implements Comparator<HashMap<String, String>> {
+        @Override
+        public int compare(HashMap<String, String> map1, HashMap<String, String> map2) {
+            return map1.get(resMismatchCount).compareTo(map2.get(resMismatchCount));
         }
     }
 }

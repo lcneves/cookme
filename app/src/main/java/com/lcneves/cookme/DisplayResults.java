@@ -2,6 +2,7 @@ package com.lcneves.cookme;
 
 import android.app.Activity;
 import android.app.ListActivity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -9,26 +10,38 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class DisplayResults extends ListActivity {
 
     private ListActivity activity = DisplayResults.this;
     ListView lv;
-    DatabaseHelper database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_results);
-        database = new DatabaseHelper(DisplayResults.this);
-        Cursor cursor = database.displayResults();
+/*        database = new DatabaseHelper(DisplayResults.this);
+        Cursor cursor = database.displayResults();*/
 
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity, R.layout.list_item, cursor, new String[] { DatabaseHelper.resName, DatabaseHelper.resIngredients, DatabaseHelper.resURL, DatabaseHelper.resMatches, DatabaseHelper.resMismatches }, new int[] { R.id.name, R.id.ingredients, R.id.url, R.id.matches, R.id.mismatches }, 0);
+        SimpleAdapter adapter = new SimpleAdapter(
+                activity,
+                SearchResults.list,
+                R.layout.list_item,
+                new String[] {DatabaseHelper.recName, DatabaseHelper.recIngredients,
+                        DatabaseHelper.recURL, DatabaseHelper.resMatches,
+                        DatabaseHelper.resMismatches },
+                new int[] { R.id.name, R.id.ingredients, R.id.url, R.id.matches, R.id.mismatches }
+        );
         setListAdapter(adapter);
         lv = getListView();
     }
@@ -62,8 +75,10 @@ public class DisplayResults extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int pos, long id) {
         super.onListItemClick(l, v, pos, id);
+        HashMap<String, String> map = SearchResults.list.get(pos);
+        String url=map.get(SearchResults.recURL);
         Intent intent = new Intent(this, RecipeViewer.class);
-        intent.putExtra("com.lcneves.cookme.URL", database.getUrl(id));
+        intent.putExtra("com.lcneves.cookme.URL", url);
         startActivity(intent);
     }
 
