@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,8 +20,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -38,9 +41,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     MyCursorAdapter adapter2;
     ListView lv;
     ListView lv2;
-    List<String> checkedList = new LinkedList<String>();
+    static List<String> checkedList = new LinkedList<String>();
 
-    DownloadParseDialogFragment dialogDownloadParse = new DownloadParseDialogFragment();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         lv2.setAdapter(adapter2);
 
         if(db.verifyRecipesTable() == false && databaseCheck == false) {
+            DownloadParseDialogFragment dialogDownloadParse = new DownloadParseDialogFragment();
             dialogDownloadParse.show(getFragmentManager(), "tag");
         }
     }
@@ -68,14 +71,28 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     }
 
-    public void searchRecipes(List<String> list) {
-        if(list.isEmpty()) return; else {
-            String[] arrayList = new String[list.size()];
-            arrayList = list.toArray(arrayList);
+    public void searchRecipes(MenuItem menuItem) {
+
+        if(checkedList.isEmpty()) {
+            Toast toast = Toast.makeText(this, "Use checkboxes to select ingredients", Toast.LENGTH_LONG);
+            toast.show();
+        } else {
+            String[] arrayList = new String[checkedList.size()];
+            arrayList = checkedList.toArray(arrayList);
             Intent intent = new Intent(this, SearchResults.class);
             intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
             startActivity(intent);
         }
+    }
+
+    public void clickSearchByName(MenuItem menuitem) {
+        RecipeNameDialogFragment recipeNameDialog = new RecipeNameDialogFragment();
+        recipeNameDialog.show(getFragmentManager(), "tag");
+    }
+
+    public void clickSearchComposite(MenuItem menuitem) {
+        CompositeDialogFragment compositeDialog = new CompositeDialogFragment();
+        compositeDialog.show(getFragmentManager(), "tag");
     }
 
     public void CheckBoxClick(View v) {
@@ -170,6 +187,76 @@ public class MainActivity extends Activity implements View.OnClickListener {
         adapter2.notifyDataSetChanged();
     }
 
+    public static class RecipeNameDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            final Context context = getActivity();
+            final EditText input = new EditText(context);
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setMessage("What recipe are you looking for?")
+                    .setView(input)
+                    .setPositiveButton("Search", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            if(input.getText().toString().isEmpty()) {
+                                Toast toast = Toast.makeText(context, "Recipe name cannot be blank", Toast.LENGTH_LONG);
+                                toast.show();
+                            } else {
+                                Intent intent = new Intent(context, SearchResults.class);
+                                intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString());
+                                startActivity(intent);
+                            }
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
+
+    public static class CompositeDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+            final Context context = getActivity();
+            final EditText input = new EditText(context);
+
+            if(checkedList.isEmpty()) {
+                Toast toast = Toast.makeText(context, "Use checkboxes to select ingredients", Toast.LENGTH_LONG);
+                toast.show();
+                this.dismiss();
+            }
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setMessage("What recipe are you looking for?")
+                    .setView(input)
+                    .setPositiveButton("Search", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            if(input.getText().toString().isEmpty()) {
+                                Toast toast = Toast.makeText(context, "Recipe name cannot be blank", Toast.LENGTH_LONG);
+                                toast.show();
+                            } else {
+                                String[] arrayList = new String[checkedList.size()];
+                                arrayList = checkedList.toArray(arrayList);
+                                Intent intent = new Intent(context, SearchResults.class);
+                                intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString());
+                                intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
+                                startActivity(intent);
+                            }
+                        }
+                    })
+                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
+
     public static class DownloadParseDialogFragment extends DialogFragment {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -232,10 +319,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (id == R.id.action_settings) {
             return true;
         }
-        if (id == R.id.action_search) {
+        /*if (id == R.id.action_search) {
             searchRecipes(checkedList);
             return true;
-        }
+        }*/
         if (id == R.id.action_clearDb) {
             db.dropRecipes();
             Intent intent = new Intent(MainActivity.this, JSONHelper.class);
@@ -244,6 +331,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    /*public void showPopup(MenuItem v) {
+        PopupMenu popup = new PopupMenu(this, v);
+        popup.inflate(R.menu.search_menu);
+        popup.show();
+    }*/
 
     @Override
     protected void onRestart() {

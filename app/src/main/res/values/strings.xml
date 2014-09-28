@@ -6,9 +6,12 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_jsonhelper">Recipes database</string>
     <string name="title_activity_search_results">Search results</string>
-    <string name="action_search">Search</string>
+    <string name="action_search">Search recipes</string>
     <string name="title_activity_recipe_viewer">Recipe</string>
     <string name="title_activity_display_results">Search results</string>
     <string name="action_clearDb">Update recipes DB</string>
+    <string name="action_name_search">by recipe name</string>
+    <string name="action_ingredients_search">by ingredients</string>
+    <string name="action_composite_search"><![CDATA[by name & ingredients]]></string>
 
 </resources>
