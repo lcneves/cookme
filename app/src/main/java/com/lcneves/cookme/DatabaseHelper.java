@@ -93,10 +93,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public String getUrl(long id) {
         String url = null;
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.query(resultsTable, new String[]{resURL}, resID+" = "+id, null, null, null, null);
+        Cursor cursor = db.query(recipesTable, new String[]{recURL}, recID+" = "+id, null, null, null, null);
         if (cursor.moveToFirst()) {
-            url = cursor.getString(cursor.getColumnIndex(resURL));
+            url = cursor.getString(cursor.getColumnIndex(recURL));
         }
+        cursor.close();
         db.close();
         return url;
     }

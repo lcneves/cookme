@@ -79,6 +79,7 @@ public class DisplayResults extends ListActivity {
         String url=map.get(SearchResults.recURL);
         Intent intent = new Intent(this, RecipeViewer.class);
         intent.putExtra("com.lcneves.cookme.URL", url);
+        intent.putExtra("com.lcneves.cookme.ACTIVITY", "display");
         startActivity(intent);
     }
 

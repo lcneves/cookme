@@ -13,5 +13,6 @@
     <string name="action_name_search">by recipe name</string>
     <string name="action_ingredients_search">by ingredients</string>
     <string name="action_composite_search"><![CDATA[by name & ingredients]]></string>
+    <string name="title_activity_search_simple">Search results</string>
 
 </resources>

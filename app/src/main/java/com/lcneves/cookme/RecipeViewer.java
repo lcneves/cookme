@@ -17,6 +17,7 @@ public class RecipeViewer extends Activity {
 
     WebView webview;
     String url;
+    String previousActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +26,7 @@ public class RecipeViewer extends Activity {
         setContentView(R.layout.recipe_viewer);
         Intent intent = getIntent();
         url = intent.getStringExtra("com.lcneves.cookme.URL");
+        previousActivity = intent.getStringExtra("com.lcneves.cookme.ACTIVITY");
         webview = (WebView) findViewById(R.id.webView);
 
         webview.getSettings().setJavaScriptEnabled(true);
@@ -66,9 +68,16 @@ public class RecipeViewer extends Activity {
             return true;
         }
         if(id == android.R.id.home) {
-            Intent intent = new Intent(this, DisplayResults.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
+            if(previousActivity == "display") {
+                Intent intent = new Intent(this, DisplayResults.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
+            if(previousActivity == "simple") {
+                Intent intent = new Intent(this, SearchSimple.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);

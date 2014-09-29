@@ -13,8 +13,8 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".MainActivity"
-            android:windowSoftInputMode="stateHidden"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:windowSoftInputMode="stateHidden" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -23,8 +23,8 @@
         </activity>
         <activity
             android:name=".JSONHelper"
-            android:label="@string/title_activity_jsonhelper"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/title_activity_jsonhelper"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -32,8 +32,8 @@
         </activity>
         <activity
             android:name=".SearchResults"
-            android:label="@string/title_activity_search_results"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/title_activity_search_results"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -41,8 +41,8 @@
         </activity>
         <activity
             android:name=".RecipeViewer"
-            android:label="@string/title_activity_recipe_viewer"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:label="@string/title_activity_recipe_viewer"
             android:parentActivityName=".DisplayResults" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -51,6 +51,14 @@
         <activity
             android:name=".DisplayResults"
             android:label="@string/title_activity_display_results"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.lcneves.cookme.MainActivity" />
+        </activity>
+        <activity
+            android:name=".SearchSimple"
+            android:label="@string/title_activity_search_simple"
             android:parentActivityName=".MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

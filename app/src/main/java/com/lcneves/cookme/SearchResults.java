@@ -163,13 +163,13 @@ public class SearchResults extends Activity {
                     for (int j = 0; j < selLength; j++) {
                         if (ingredients.toLowerCase(Locale.ENGLISH).contains(selIngredients[j].toLowerCase(Locale.ENGLISH))) {
                             if(matchesBuilder.length() > 6)
-                                matchesBuilder.append(comma);
+                                matchesBuilder.append(", ");
                             matchesBuilder.append(selIngredients[j]);
 
                         } else {
                             if(misMatchesBuilder.length() > 13)
-                                matchesBuilder.append(comma);
-                            matchesBuilder.append(selIngredients[j]);
+                                misMatchesBuilder.append(", ");
+                            misMatchesBuilder.append(selIngredients[j]);
                             misCount++;
                         }
                     }
@@ -241,7 +241,7 @@ public class SearchResults extends Activity {
     public class MiscountComparator implements Comparator<HashMap<String, String>> {
         @Override
         public int compare(HashMap<String, String> map1, HashMap<String, String> map2) {
-            return map1.get(resMismatchCount).compareTo(map2.get(resMismatchCount));
+            return Double.compare(Integer.parseInt(map1.get(resMismatchCount)), Integer.parseInt(map2.get(resMismatchCount)));
         }
     }
     public class LengthComparator implements Comparator<HashMap<String, String>> {

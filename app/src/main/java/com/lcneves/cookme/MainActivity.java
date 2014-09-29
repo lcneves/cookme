@@ -79,7 +79,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         } else {
             String[] arrayList = new String[checkedList.size()];
             arrayList = checkedList.toArray(arrayList);
-            Intent intent = new Intent(this, SearchResults.class);
+            Intent intent = new Intent(this, SearchSimple.class);
             intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
             startActivity(intent);
         }
@@ -113,7 +113,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     public void OnAddingIngredients(View v){
         EditText editText = (EditText) findViewById(R.id.editText);
-        String newIngredient = editText.getText().toString();
+        String newIngredient = editText.getText().toString().trim();
         if(newIngredient.length() > 1) {
             db.addIngredient(newIngredient);
             editText.setText("");
@@ -125,7 +125,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     public void OnAddingShopping(View v){
         EditText editText = (EditText) findViewById(R.id.editText2);
-        String newShopping = editText.getText().toString();
+        String newShopping = editText.getText().toString().trim();
         if(newShopping.length() > 1) {
             db.addShopping(newShopping);
             editText.setText("");
@@ -138,7 +138,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void DeleteRowIngredients(View v){
         LinearLayout llMain = (LinearLayout)v.getParent();
         TextView row=(TextView)llMain.getChildAt(0);
+        CheckBox checkBox = (CheckBox)llMain.getChildAt(1);
+        TextView item=(TextView)llMain.getChildAt(2);
         String row_no=row.getText().toString();
+        String row_item=item.getText().toString();
+        if(checkBox.isChecked()) {
+            if (checkedList.contains(row_item))
+                checkedList.remove(row_item);
+        }
         db.deleteIngredient(row_no);
         Cursor newCursor = db.displayIngredients();
         adapter.changeCursor(newCursor);
@@ -148,7 +155,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void DeleteRowShopping(View v){
         LinearLayout llMain = (LinearLayout)v.getParent();
         TextView row=(TextView)llMain.getChildAt(0);
+        CheckBox checkBox = (CheckBox)llMain.getChildAt(1);
+        TextView item=(TextView)llMain.getChildAt(2);
         String row_no=row.getText().toString();
+        String row_item=item.getText().toString();
+        if(checkBox.isChecked()) {
+            if (checkedList.contains(row_item))
+                checkedList.remove(row_item);
+        }
         db.deleteShopping(row_no);
         Cursor newCursor2 = db.displayShopping();
         adapter2.changeCursor(newCursor2);
@@ -202,7 +216,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                                 Toast toast = Toast.makeText(context, "Recipe name cannot be blank", Toast.LENGTH_LONG);
                                 toast.show();
                             } else {
-                                Intent intent = new Intent(context, SearchResults.class);
+                                Intent intent = new Intent(context, SearchSimple.class);
                                 intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString());
                                 startActivity(intent);
                             }
@@ -241,7 +255,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             } else {
                                 String[] arrayList = new String[checkedList.size()];
                                 arrayList = checkedList.toArray(arrayList);
-                                Intent intent = new Intent(context, SearchResults.class);
+                                Intent intent = new Intent(context, SearchSimple.class);
                                 intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString());
                                 intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
                                 startActivity(intent);
