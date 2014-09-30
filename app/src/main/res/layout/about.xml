@@ -6,29 +6,70 @@
     android:layout_height="match_parent"
     android:padding="20dp"
     >
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Cook me!"
-        android:id="@+id/textView"
-        android:layout_gravity="center_horizontal" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Alpha version, for alpha testers only!"
-        android:id="@+id/textView2"
-        android:layout_gravity="center_horizontal"
-        android:paddingBottom="5dp"/>
-
-    <TextView
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Cook me! is free software under the MIT license."
-        android:id="@+id/textView3" />
-    
+        android:fillViewport="true">
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textSize="30sp"
+                android:text="Cook me!"
+                android:id="@+id/textView"
+                android:layout_gravity="center_horizontal" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="Alpha version, for alpha testers only!"
+                android:id="@+id/textView2"
+                android:layout_gravity="center_horizontal"
+                android:paddingBottom="15dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Cook me! is free software under the MIT license. The source code, the license document and the author's contact info can be found at https://github.com/lcneves/cookme"
+                android:paddingBottom="10pt"
+                android:id="@+id/aboutPar1" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Special thanks to:"
+                android:textStyle="bold"
+                android:paddingBottom="3pt"
+                android:id="@+id/aboutPar2" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Maria Savchenko, for the brilliant idea;"
+                android:paddingBottom="3pt"
+                android:id="@+id/aboutPar3" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="The OpenRecipes project by Fictive Kin, for the huge recipes database. Please visit https://github.com/fictivekin/openrecipes to support that awesome project and for license details."
+                android:paddingBottom="10pt"
+                android:id="@+id/aboutPar4" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Happy cooking!"
+                android:paddingBottom="3pt"
+                android:id="@+id/aboutPar5" />
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

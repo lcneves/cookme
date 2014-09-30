@@ -1,6 +1,7 @@
 package com.lcneves.cookme;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -10,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -19,6 +21,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -184,9 +187,23 @@ public class SearchSimple extends ListActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        /*
         if (id == R.id.action_settings) {
             return true;
-        }
+        }*/
         return super.onOptionsItemSelected(item);
+    }
+
+    public void clickAboutMenuSimple(MenuItem menu) {
+        View messageView = getLayoutInflater().inflate(R.layout.about, null, false);
+        TextView par1 = (TextView) messageView.findViewById(R.id.aboutPar1);
+        TextView par4 = (TextView) messageView.findViewById(R.id.aboutPar4);
+        Log.d("com.lcneves.cookme.MainActivity", "Par4 = "+par4.toString());
+        Linkify.addLinks(par1, Linkify.WEB_URLS);
+        Linkify.addLinks(par4, Linkify.WEB_URLS);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(messageView);
+        builder.create();
+        builder.show();
     }
 }

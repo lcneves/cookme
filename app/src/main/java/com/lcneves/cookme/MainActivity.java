@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.util.Linkify;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -330,9 +332,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        /*
         if (id == R.id.action_settings) {
             return true;
-        }
+        }*/
         /*if (id == R.id.action_search) {
             searchRecipes(checkedList);
             return true;
@@ -344,6 +347,19 @@ public class MainActivity extends Activity implements View.OnClickListener {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void clickAboutMenuMain(MenuItem menu) {
+        View messageView = getLayoutInflater().inflate(R.layout.about, null, false);
+        TextView par1 = (TextView) messageView.findViewById(R.id.aboutPar1);
+        TextView par4 = (TextView) messageView.findViewById(R.id.aboutPar4);
+        Log.d("com.lcneves.cookme.MainActivity", "Par4 = "+par4.toString());
+        Linkify.addLinks(par1, Linkify.WEB_URLS);
+        Linkify.addLinks(par4, Linkify.WEB_URLS);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(messageView);
+        builder.create();
+        builder.show();
     }
 
     /*public void showPopup(MenuItem v) {
