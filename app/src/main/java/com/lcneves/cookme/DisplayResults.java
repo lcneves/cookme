@@ -90,9 +90,10 @@ public class DisplayResults extends ListActivity {
         View messageView = getLayoutInflater().inflate(R.layout.about, null, false);
         TextView par1 = (TextView) messageView.findViewById(R.id.aboutPar1);
         TextView par4 = (TextView) messageView.findViewById(R.id.aboutPar4);
-        Log.d("com.lcneves.cookme.MainActivity", "Par4 = "+par4.toString());
+        TextView par5 = (TextView) messageView.findViewById(R.id.aboutPar5);
         Linkify.addLinks(par1, Linkify.WEB_URLS);
         Linkify.addLinks(par4, Linkify.WEB_URLS);
+        Linkify.addLinks(par5, Linkify.WEB_URLS);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(messageView);
         builder.create();

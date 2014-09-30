@@ -61,15 +61,22 @@
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="The OpenRecipes project by Fictive Kin, for the huge recipes database. Please visit https://github.com/fictivekin/openrecipes to support that awesome project and for license details."
-                android:paddingBottom="10pt"
+                android:paddingBottom="3pt"
                 android:id="@+id/aboutPar4" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Turbomilk for the beautiful icon. Check out their work at http://turbomilk.com"
+                android:paddingBottom="10pt"
+                android:id="@+id/aboutPar5" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Happy cooking!"
                 android:paddingBottom="3pt"
-                android:id="@+id/aboutPar5" />
+                android:id="@+id/aboutPar6" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
