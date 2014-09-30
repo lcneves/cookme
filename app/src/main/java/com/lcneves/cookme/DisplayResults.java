@@ -55,7 +55,7 @@ public class DisplayResults extends ListActivity {
         getListView().post(new Runnable() {
             @Override
             public void run() {
-                getListView().smoothScrollToPosition(cursorCount);
+                getListView().setSelection(cursorCount);
             }
         });
     }

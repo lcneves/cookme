@@ -130,8 +130,10 @@ public class SearchSimple extends ListActivity {
                 setListAdapter(adapter);
                 lv = getListView();
                 if(selIngredients != null) {
-                    View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
-                    lv.addFooterView(footerView);
+                    if(selIngredients.length > 2) {
+                        View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
+                        lv.addFooterView(footerView);
+                    }
                 }
             } else {
                 Toast toast = Toast.makeText(SearchSimple.this, "No recipe uses all the selected ingredients...", Toast.LENGTH_LONG);
