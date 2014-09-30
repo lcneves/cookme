@@ -14,5 +14,6 @@
     <string name="action_ingredients_search">by ingredients</string>
     <string name="action_composite_search"><![CDATA[by name & ingredients]]></string>
     <string name="title_activity_search_simple">Search results</string>
+    <string name="action_about">About...</string>
 
 </resources>

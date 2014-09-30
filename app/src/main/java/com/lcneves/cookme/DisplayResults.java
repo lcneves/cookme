@@ -6,6 +6,8 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,25 +27,35 @@ public class DisplayResults extends ListActivity {
 
     private ListActivity activity = DisplayResults.this;
     ListView lv;
+    static final String resMatches="Matches";
+    static final String resMismatches="Mismatches";
+    int cursorCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_results);
-/*        database = new DatabaseHelper(DisplayResults.this);
-        Cursor cursor = database.displayResults();*/
+        Intent intent = getIntent();
+        cursorCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
 
         SimpleAdapter adapter = new SimpleAdapter(
                 activity,
                 SearchResults.list,
                 R.layout.list_item,
                 new String[] {DatabaseHelper.recName, DatabaseHelper.recIngredients,
-                        DatabaseHelper.recURL, DatabaseHelper.resMatches,
-                        DatabaseHelper.resMismatches },
+                        DatabaseHelper.recURL, resMatches,
+                        resMismatches },
                 new int[] { R.id.name, R.id.ingredients, R.id.url, R.id.matches, R.id.mismatches }
         );
         setListAdapter(adapter);
         lv = getListView();
+        Log.d("com.lcneves.cookme.DisplayResults", "cursorCount = "+cursorCount);
+        getListView().post(new Runnable() {
+            @Override
+            public void run() {
+                getListView().smoothScrollToPosition(cursorCount);
+            }
+        });
     }
 
 

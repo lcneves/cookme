@@ -47,7 +47,7 @@ public class JSONHelper extends Activity {
     static final String recName="Name";
     static final String recIngredients="Ingredients";
     static final String recURL="URL";
-    static final String dbName="RecipesDB";
+    static final String recLength="Length";
     static final String recipesTable="Recipes";
     static String fileNameOld = "recipeitems-latest.json";
     static String fileNameNew = "recipeitems-edited.json";
@@ -142,6 +142,7 @@ public class JSONHelper extends Activity {
 
         private Context context;
         private PowerManager.WakeLock mWakeLock;
+        int fileLength;
 
         public DownloadTask(Context context) {
             this.context = context;
@@ -172,7 +173,7 @@ public class JSONHelper extends Activity {
 
                 // this will be useful to display download percentage
                 // might be -1: server did not report the length
-                int fileLength = connection.getContentLength();
+                fileLength = connection.getContentLength();
 
                 // download the file
                 input = connection.getInputStream();
@@ -192,7 +193,7 @@ public class JSONHelper extends Activity {
                     total += count;
                     // publishing the progress....
                     if (fileLength > 0) // only if total length is known
-                        publishProgress((int) (total * 100 / fileLength));
+                        publishProgress((int) (total));
                         output.write(data, 0, count);
                 }
             } catch (Exception e) {
@@ -229,7 +230,8 @@ public class JSONHelper extends Activity {
             super.onProgressUpdate(progress);
             // if we get here, length is known, now set indeterminate to false
             mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMax(100);
+            mProgressDialog.setMessage("Downloading "+(fileLength/1048576)+" MB...");
+            mProgressDialog.setMax(fileLength);
             mProgressDialog.setProgress(progress[0]);
         }
 
@@ -439,12 +441,14 @@ public class JSONHelper extends Activity {
                         }
                     }
                     lineProgress++;
-                    publishProgress((int) (lineProgress));
+                    if(lineProgress % 1000 == 0)
+                        publishProgress((int) (lineProgress));
                     jsonReader.endObject();
                     ContentValues cv=new ContentValues();
                     cv.put(recName, jsonName);
                     cv.put(recIngredients, jsonIngredients);
                     cv.put(recURL, jsonUrl);
+                    cv.put(recLength, jsonIngredients.length());
                     db.insertOrThrow(recipesTable, null, cv);
                 }
             } catch (IOException e) {
@@ -453,10 +457,6 @@ public class JSONHelper extends Activity {
             } finally {
                 db.setTransactionSuccessful();
                 db.endTransaction();
-                //Cursor cursor = db.query(DatabaseHelper.recipesTable, null, null, null, null, null, null);
-                //int rowCount = cursor.getCount();
-                //if(true)
-                //    throw new NullPointerException("Rows: "+rowCount);
                 db.close();
                 try {
                     jsonReader.close();

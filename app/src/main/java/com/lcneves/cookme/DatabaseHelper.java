@@ -20,16 +20,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     static final String recName="Name";
     static final String recIngredients="Ingredients";
     static final String recURL="URL";
-
-    static final String resultsTable="Results";
-    static final String resID="_id";
-    static final String resName="ResName";
-    static final String resIngredients="ResIngredients";
-    static final String resURL="ResURL";
-    static final String resMatches="Matches";
-    static final String resMismatches="Mismatches";
-    static final String resMatchCount="MatchCount";
-    static final String resMismatchCount="MismatchCount";
+    static final String recLength="Length";
 
     static final String ingredientsTable="IngredientsTable";
     static final String ingID="_id";
@@ -60,9 +51,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void recreateDatabase() {
         SQLiteDatabase db=this.getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS "+recipesTable);
-        db.execSQL("DROP TABLE IF EXISTS "+resultsTable);
-        db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recURL+" TEXT)");
-        db.execSQL("CREATE TABLE "+resultsTable+" ("+resID+" INTEGER PRIMARY KEY, "+resName+" TEXT, "+resIngredients+" TEXT, "+resURL+" TEXT, "+resMatches+" TEXT, "+resMismatches+" TEXT, "+resMatchCount+" INTEGER, "+resMismatchCount+" INTEGER)");
+        db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER)");
         db.close();
     }
 
@@ -77,17 +66,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS "+ingredientsTable+" ("+ingID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+ingName+" TEXT)");
         db.execSQL("CREATE TABLE IF NOT EXISTS "+shoppingTable+" ("+shoID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+shoName+" TEXT)");
         db.close();
-    }
-
-    public Cursor displayResults() {
-        SQLiteDatabase db=this.getWritableDatabase();
-        Cursor resultsCursor = db.query(resultsTable, new String[] {resID, resName, resIngredients, resURL, resMatches, resMismatches, resMismatchCount}, null, null, null, null, resMismatchCount);
-
-        if (resultsCursor != null) {
-            resultsCursor.moveToFirst();
-        }
-        db.close();
-        return resultsCursor;
     }
 
     public String getUrl(long id) {

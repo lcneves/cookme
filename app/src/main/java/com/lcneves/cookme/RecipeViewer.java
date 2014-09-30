@@ -68,12 +68,13 @@ public class RecipeViewer extends Activity {
             return true;
         }
         if(id == android.R.id.home) {
-            if(previousActivity == "display") {
+            Log.d("com.lcneves.cookme.RecipeViewer", "previousActivity = "+previousActivity);
+            if(previousActivity.equals("display")) {
                 Intent intent = new Intent(this, DisplayResults.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
             }
-            if(previousActivity == "simple") {
+            if(previousActivity.equals("simple")) {
                 Intent intent = new Intent(this, SearchSimple.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);

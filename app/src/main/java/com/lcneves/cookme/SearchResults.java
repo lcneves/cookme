@@ -36,6 +36,7 @@ public class SearchResults extends Activity {
     String[] selIngredients;
     String recipeName;
     String selIngredientsDummy = null;
+    int cursorCount;
     static final String recipesTable="Recipes";
     static final String recName="Name";
     static final String recIngredients="Ingredients";
@@ -53,6 +54,7 @@ public class SearchResults extends Activity {
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
+        cursorCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
         list = null;
         Log.d("com.lcneves.cookme.SearchResults", "selIngredients= "+selIngredients+", recipeName= "+recipeName);
 
@@ -204,7 +206,7 @@ public class SearchResults extends Activity {
         protected void onProgressUpdate(Integer... progress) {
             super.onProgressUpdate(progress);
             // if we get here, length is known, now set indeterminate to false
-            mProgressDialog.setMessage("Found "+rowCount+" recipes matching your ingredients. Processing...");
+            mProgressDialog.setMessage("Found "+rowCount+" recipes matching some of your ingredients. Processing...");
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMax(rowCount);
             mProgressDialog.setProgress(progress[0]);
@@ -233,6 +235,7 @@ public class SearchResults extends Activity {
                 startActivity(intent);
             } else {
                 Intent intent = new Intent(SearchResults.this, DisplayResults.class);
+                intent.putExtra("com.lcneves.cookme.ROW", cursorCount);
                 startActivity(intent);
             }
         }

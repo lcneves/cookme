@@ -12,9 +12,11 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
@@ -39,7 +41,9 @@ public class SearchSimple extends ListActivity {
     static final String recName="Name";
     static final String recIngredients="Ingredients";
     static final String recURL="URL";
+    static final String recLength="Length";
     Cursor cursor;
+    int cursorCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +95,7 @@ public class SearchSimple extends ListActivity {
                 }
             }
             Log.d("com.lcneves.cookme.SearchSimple", "whereCondition is: " + whereCondition);
-            cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
+            cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL, recLength}, whereCondition, null, null, null, recLength);
             Log.d("com.lcneves.cookme.SearchResults", "Simple search took " + (((System.nanoTime() - startTime)) / 1000000)+" ms");
             return null;
         }
@@ -113,6 +117,7 @@ public class SearchSimple extends ListActivity {
             mWakeLock.release();
             mProgressDialog.dismiss();
             if(cursor.moveToFirst()) {
+                cursorCount = cursor.getCount();
                 SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
                         R.layout.list_item_simple,
                         cursor,
@@ -121,6 +126,10 @@ public class SearchSimple extends ListActivity {
                         0);
                 setListAdapter(adapter);
                 lv = getListView();
+                if(selIngredients != null) {
+                    View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
+                    lv.addFooterView(footerView);
+                }
             } else {
                 Toast toast = Toast.makeText(SearchSimple.this, "No recipe uses all the selected ingredients...", Toast.LENGTH_LONG);
                 toast.show();
@@ -152,6 +161,14 @@ public class SearchSimple extends ListActivity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    public void clickShowMore(View v) {
+        Intent intent = new Intent(SearchSimple.this, SearchResults.class);
+        intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
+        intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
+        intent.putExtra("com.lcneves.cookme.ROW", cursorCount);
+        startActivity(intent);
     }
 
     @Override
