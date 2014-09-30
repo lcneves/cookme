@@ -432,9 +432,9 @@ public class JSONHelper extends Activity {
                     while (jsonReader.hasNext()) {
                         String name = jsonReader.nextName();
                         if (name.equals(NAME)) {
-                            jsonName = jsonReader.nextString();
+                            jsonName = jsonReader.nextString().replace("&amp;", "&");
                         } else if (name.equals(INGREDIENTS)) {
-                            jsonIngredients = jsonReader.nextString();
+                            jsonIngredients = jsonReader.nextString().replace("&amp;", "&");
                         } else if (name.equals(URL)) {
                             jsonUrl = jsonReader.nextString();
                         } else {
