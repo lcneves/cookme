@@ -136,12 +136,19 @@ public class SearchSimple extends ListActivity {
                     }
                 }
             } else {
-                Toast toast = Toast.makeText(SearchSimple.this, "No recipe uses all the selected ingredients...", Toast.LENGTH_LONG);
-                toast.show();
-                Intent intent = new Intent(SearchSimple.this, SearchResults.class);
-                intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
-                intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
-                startActivity(intent);
+                if(selIngredients != null) {
+                    Toast toast = Toast.makeText(SearchSimple.this, "No recipes found with all the selected ingredients...", Toast.LENGTH_LONG);
+                    toast.show();
+                    Intent intent = new Intent(SearchSimple.this, SearchResults.class);
+                    intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
+                    intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
+                    startActivity(intent);
+                } else {
+                    Toast toast = Toast.makeText(SearchSimple.this, "No recipes found with the name \""+recipeName+"\"", Toast.LENGTH_LONG);
+                    toast.show();
+                    Intent intent = new Intent(SearchSimple.this, MainActivity.class);
+                    startActivity(intent);
+                }
             }
         }
     }
