@@ -1,5 +1,7 @@
 package com.lcneves.cookme;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -46,23 +48,93 @@ public class MainActivity extends Activity implements View.OnClickListener {
     ListView lv;
     ListView lv2;
     static List<String> checkedList = new LinkedList<String>();
-
+    LinearLayout ingredientsLayout;
+    static Cursor cursor;
+    static Cursor cursor2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db.createGroceryList();
-        setContentView(R.layout.grocery_list);
+        setContentView(R.layout.grocery_list_vertical);
+
+        ingredientsLayout = (LinearLayout) this.findViewById(R.id.ingredientsLayout);
 
         lv = (ListView) findViewById(R.id.listview);
-        Cursor cursor = db.displayIngredients();
+        cursor = db.displayIngredients();
         adapter = new MyCursorAdapter(MainActivity.this, R.layout.ingredients_item, cursor, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
         lv.setAdapter(adapter);
 
         lv2 = (ListView) findViewById(R.id.listview2);
-        Cursor cursor2 = db.displayShopping();
+        cursor2 = db.displayShopping();
         adapter2 = new MyCursorAdapter(MainActivity.this, R.layout.shopping_item, cursor2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
         lv2.setAdapter(adapter2);
+
+        // Create a ListView-specific touch listener. ListViews are given special treatment because
+        // by default they handle touches for their list items... i.e. they're in charge of drawing
+        // the pressed state (the list selector), handling list item clicks, etc.
+        SwipeDismissListViewTouchListener touchListener =
+                new SwipeDismissListViewTouchListener(
+                        lv,
+                        new SwipeDismissListViewTouchListener.DismissCallbacks() {
+                            @Override
+                            public boolean canDismiss(int position) {
+                                return true;
+                            }
+
+                            @Override
+                            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+                                for (int position : reverseSortedPositions) {
+                                    cursor = db.displayIngredients();
+                                    String rowId = String.valueOf(adapter.getItemId(position));
+                                    cursor.moveToPosition(position);
+                                    String row_item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.ingName));
+                                    if (checkedList.contains(row_item))
+                                        checkedList.remove(row_item);
+                                    db.deleteIngredient(rowId);
+                                }
+                                cursor = db.displayIngredients();
+                                adapter.changeCursor(cursor);
+                                adapter.notifyDataSetChanged();
+                            }
+                        });
+        lv.setOnTouchListener(touchListener);
+        // Setting this scroll listener is required to ensure that during ListView scrolling,
+        // we don't look for swipes.
+        lv.setOnScrollListener(touchListener.makeScrollListener());
+
+        // Create a ListView-specific touch listener. ListViews are given special treatment because
+        // by default they handle touches for their list items... i.e. they're in charge of drawing
+        // the pressed state (the list selector), handling list item clicks, etc.
+        SwipeDismissListViewTouchListener touchListener2 =
+                new SwipeDismissListViewTouchListener(
+                        lv2,
+                        new SwipeDismissListViewTouchListener.DismissCallbacks() {
+                            @Override
+                            public boolean canDismiss(int position) {
+                                return true;
+                            }
+
+                            @Override
+                            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+                                for (int position : reverseSortedPositions) {
+                                    cursor2 = db.displayShopping();
+                                    String rowId = String.valueOf(adapter2.getItemId(position));
+                                    cursor2.moveToPosition(position);
+                                    String row_item = cursor2.getString(cursor2.getColumnIndex(DatabaseHelper.shoName));
+                                    if (checkedList.contains(row_item))
+                                        checkedList.remove(row_item);
+                                    db.deleteShopping(rowId);
+                                }
+                                cursor2 = db.displayShopping();
+                                adapter2.changeCursor(cursor2);
+                                adapter2.notifyDataSetChanged();
+                            }
+                        });
+        lv2.setOnTouchListener(touchListener2);
+        // Setting this scroll listener is required to ensure that during ListView scrolling,
+        // we don't look for swipes.
+        lv2.setOnScrollListener(touchListener2.makeScrollListener());
 
         if(db.verifyRecipesTable() == false && databaseCheck == false) {
             DownloadParseDialogFragment dialogDownloadParse = new DownloadParseDialogFragment();
@@ -384,6 +456,47 @@ public class MainActivity extends Activity implements View.OnClickListener {
         popup.inflate(R.menu.search_menu);
         popup.show();
     }*/
+
+    public void expandIngredients (View v) {
+        float ingredientsWeight = ((LinearLayout.LayoutParams) ingredientsLayout.getLayoutParams()).weight;
+        if(ingredientsWeight == 0) {
+            ValueAnimator anim = ValueAnimator.ofFloat(ingredientsWeight, 1);
+            anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                    float val = (Float) valueAnimator.getAnimatedValue();
+                    ViewGroup.LayoutParams layoutParams = ingredientsLayout.getLayoutParams();
+                    ingredientsLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            0,
+                            val));
+                }
+            });
+            anim.setDuration(1000);
+            anim.start();
+        }
+    }
+
+    public void expandShopping (View v) {
+        float ingredientsWeight = ((LinearLayout.LayoutParams) ingredientsLayout.getLayoutParams()).weight;
+        Log.d("com.lcneves.cookme.MainActivity", "ingredientsWeight ="+ingredientsWeight);
+        if(ingredientsWeight == 1) {
+            ValueAnimator anim = ValueAnimator.ofFloat(ingredientsWeight, 0);
+            anim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                @Override
+                public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                    float val = (Float) valueAnimator.getAnimatedValue();
+                    ViewGroup.LayoutParams layoutParams = ingredientsLayout.getLayoutParams();
+                    ingredientsLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            0,
+                            val));
+                }
+            });
+            anim.setDuration(1000);
+            anim.start();
+        }
+    }
 
     @Override
     protected void onRestart() {

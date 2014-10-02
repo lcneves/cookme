@@ -27,15 +27,8 @@
     <Button android:id="@+id/moveButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="→"
+        android:text="↓"
         android:onClick="MoveRowIngredients"
-        style="@android:style/TextAppearance.Holo.Medium">
-    </Button>
-    <Button android:id="@+id/deleteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="-"
-        android:onClick="DeleteRowIngredients"
         style="@android:style/TextAppearance.Holo.Medium">
     </Button>
 </LinearLayout>
