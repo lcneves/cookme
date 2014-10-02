@@ -18,6 +18,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -214,7 +216,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     .setView(input)
                     .setPositiveButton("Search", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            if(input.getText().toString().isEmpty()) {
+                            if (input.getText().toString().isEmpty()) {
                                 Toast toast = Toast.makeText(context, "Recipe name cannot be blank", Toast.LENGTH_LONG);
                                 toast.show();
                             } else {
@@ -231,6 +233,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
             // Create the AlertDialog object and return it
             return builder.create();
         }
+
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        }
+
     }
 
     public static class CompositeDialogFragment extends DialogFragment {
@@ -271,6 +280,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
             // Create the AlertDialog object and return it
             return builder.create();
         }
+
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        }
+
     }
 
     public static class DownloadParseDialogFragment extends DialogFragment {
