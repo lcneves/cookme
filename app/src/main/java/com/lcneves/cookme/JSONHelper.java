@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.zip.GZIPInputStream;
 
 import android.app.ProgressDialog;
@@ -143,7 +144,8 @@ public class JSONHelper extends Activity {
 
         private Context context;
         private PowerManager.WakeLock mWakeLock;
-        int fileLength;
+        double fileLength;
+        int fileLengthInt;
 
         public DownloadTask(Context context) {
             this.context = context;
@@ -174,7 +176,8 @@ public class JSONHelper extends Activity {
 
                 // this will be useful to display download percentage
                 // might be -1: server did not report the length
-                fileLength = connection.getContentLength();
+                fileLengthInt = connection.getContentLength();
+                fileLength = fileLengthInt;
 
                 // download the file
                 input = connection.getInputStream();
@@ -231,8 +234,8 @@ public class JSONHelper extends Activity {
             super.onProgressUpdate(progress);
             // if we get here, length is known, now set indeterminate to false
             mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMessage("Downloading "+(fileLength/1048576)+" MB...");
-            mProgressDialog.setMax(fileLength);
+            mProgressDialog.setMessage("Downloading "+(new DecimalFormat("#.##").format(fileLength/1048576))+" MB...");
+            mProgressDialog.setMax(fileLengthInt);
             mProgressDialog.setProgress(progress[0]);
         }
 

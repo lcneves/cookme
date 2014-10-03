@@ -5,7 +5,7 @@
     android:layout_height="fill_parent">
     <TextView android:id="@+id/item0"
         android:text="_id"
-        android:layout_height="fill_parent"
+        android:layout_height="match_parent"
         android:layout_width="0dp"
         />
     <CheckBox
@@ -18,17 +18,19 @@
 
     <TextView android:id="@+id/grocery"
         android:text="items"
-        android:layout_height="fill_parent"
+        android:layout_height="match_parent"
         android:layout_width="wrap_content"
         android:gravity="center_vertical"
         android:layout_weight="1"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp"
         style="@android:style/TextAppearance.Holo.Medium"
         />
-    <Button android:id="@+id/moveButton"
+    <ImageView
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="↓"
-        android:onClick="MoveRowIngredients"
-        style="@android:style/TextAppearance.Holo.Medium">
-    </Button>
+        android:layout_height="match_parent"
+        android:paddingRight="5dp"
+        android:clickable="true"
+        android:src="@drawable/ic_action_down"
+        android:onClick="MoveRowIngredients" />
 </LinearLayout>

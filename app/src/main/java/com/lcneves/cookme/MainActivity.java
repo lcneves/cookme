@@ -14,10 +14,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.text.util.Linkify;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -37,7 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends Activity implements GestureDetector.OnGestureListener {
 
     static String fileNameOld = "recipeitems-latest.json";
     static File fileOld = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameOld);
@@ -52,11 +54,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
     static Cursor cursor;
     static Cursor cursor2;
 
+    GestureDetector gestureDetector;
+    private final float flingMin = 100;
+    private final float velocityMin = 100;
+    private boolean isIngredients;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db.createGroceryList();
         setContentView(R.layout.grocery_list_vertical);
+
+        gestureDetector = new GestureDetector(this, this);
+        View shoppingHeader = findViewById(R.id.shoppingHeader);
+        shoppingHeader.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                isIngredients = false;
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
+        View ingredientsHeader = findViewById(R.id.ingredientsHeader);
+        ingredientsHeader.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                isIngredients = true;
+                return gestureDetector.onTouchEvent(event);
+            }
+        });
 
         ingredientsLayout = (LinearLayout) this.findViewById(R.id.ingredientsLayout);
 
@@ -142,11 +165,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    @Override
-    public void onClick(View view) {
-
-    }
-
     public void searchRecipes(MenuItem menuItem) {
 
         if(checkedList.isEmpty()) {
@@ -211,7 +229,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    public void DeleteRowIngredients(View v){
+/*    public void DeleteRowIngredients(View v){
         LinearLayout llMain = (LinearLayout)v.getParent();
         TextView row=(TextView)llMain.getChildAt(0);
         CheckBox checkBox = (CheckBox)llMain.getChildAt(1);
@@ -226,9 +244,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         Cursor newCursor = db.displayIngredients();
         adapter.changeCursor(newCursor);
         adapter.notifyDataSetChanged();
-    }
+    }*/
 
-    public void DeleteRowShopping(View v){
+ /*   public void DeleteRowShopping(View v){
         LinearLayout llMain = (LinearLayout)v.getParent();
         TextView row=(TextView)llMain.getChildAt(0);
         CheckBox checkBox = (CheckBox)llMain.getChildAt(1);
@@ -243,7 +261,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         Cursor newCursor2 = db.displayShopping();
         adapter2.changeCursor(newCursor2);
         adapter2.notifyDataSetChanged();
-    }
+    }*/
 
     public void MoveRowIngredients(View v){
         LinearLayout llMain = (LinearLayout)v.getParent();
@@ -275,6 +293,46 @@ public class MainActivity extends Activity implements View.OnClickListener {
         Cursor newCursor2 = db.displayShopping();
         adapter2.changeCursor(newCursor2);
         adapter2.notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onDown(MotionEvent motionEvent) {
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent motionEvent) {
+        if(isIngredients) expandIngredients(null);
+        else expandShopping(null);
+        return true;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
+        float verticalDiff = motionEvent2.getY() - motionEvent.getY();
+        float absVDiff = Math.abs(verticalDiff);
+        float absVelocityY = Math.abs(v2);
+        if(absVelocityY>velocityMin && absVDiff>flingMin){
+            if(verticalDiff<0)
+                expandShopping(null);
+            else expandIngredients(null);
+        }
+        return true;
     }
 
     public static class RecipeNameDialogFragment extends DialogFragment {
@@ -383,6 +441,27 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
+    public static class UpdateDBDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("Do you want to download and import the newest recipes database?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent intent = new Intent(getActivity(), JSONHelper.class);
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+    }
+
     private class MyCursorAdapter extends SimpleCursorAdapter {
 
         public MyCursorAdapter(Context context, int layout, Cursor c,
@@ -429,9 +508,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             return true;
         }*/
         if (id == R.id.action_clearDb) {
-            db.dropRecipes();
-            Intent intent = new Intent(MainActivity.this, JSONHelper.class);
-            startActivity(intent);
+            UpdateDBDialogFragment updateDBDialog = new UpdateDBDialogFragment();
+            updateDBDialog.show(getFragmentManager(), "tag");
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -472,7 +550,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             val));
                 }
             });
-            anim.setDuration(1000);
+            anim.setDuration(500);
             anim.start();
         }
     }
@@ -493,7 +571,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             val));
                 }
             });
-            anim.setDuration(1000);
+            anim.setDuration(500);
             anim.start();
         }
     }

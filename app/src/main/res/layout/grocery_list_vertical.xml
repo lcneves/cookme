@@ -13,9 +13,9 @@
     <LinearLayout android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#80ff0000"
+        android:background="#80ff6000"
         >
-        <TextView android:id="@+id/item1"
+        <TextView android:id="@+id/ingredientsHeader"
             style="@android:style/TextAppearance.Holo.Large"
             android:layout_width="match_parent"
             android:layout_height="40dip"
@@ -53,12 +53,13 @@
                         android:layout_weight="1"
                         android:hint="New ingredient"
                         android:inputType="text" />
-                    <Button
-                        android:id="@+id/addmore"
+                    <ImageView
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
+                        android:paddingRight="5dp"
+                        android:clickable="true"
                         android:onClick="OnAddingIngredients"
-                        android:text="+" />
+                        android:src="@drawable/ic_action_done" />
 
                 </LinearLayout>
                 <LinearLayout
@@ -81,7 +82,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#8000c600"
+        android:background="#8087c600"
         android:orientation="horizontal">
         <TextView android:id="@+id/shoppingHeader"
             style="@android:style/TextAppearance.Holo.Large"
@@ -122,12 +123,13 @@
                         android:layout_weight="1"
                         android:hint="New ingredient"
                         android:inputType="text" />
-                    <Button
-                        android:id="@+id/addmore2"
+                    <ImageView
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
+                        android:paddingRight="5dp"
+                        android:clickable="true"
                         android:onClick="OnAddingShopping"
-                        android:text="+" />
+                        android:src="@drawable/ic_action_done" />
 
                 </LinearLayout>
 
