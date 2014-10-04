@@ -10,10 +10,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.util.Linkify;
 import android.util.Log;
+import android.view.Display;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -55,8 +57,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     static Cursor cursor2;
 
     GestureDetector gestureDetector;
-    private final float flingMin = 100;
-    private final float velocityMin = 100;
     private boolean isIngredients;
 
     @Override
@@ -229,40 +229,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
     }
 
-/*    public void DeleteRowIngredients(View v){
-        LinearLayout llMain = (LinearLayout)v.getParent();
-        TextView row=(TextView)llMain.getChildAt(0);
-        CheckBox checkBox = (CheckBox)llMain.getChildAt(1);
-        TextView item=(TextView)llMain.getChildAt(2);
-        String row_no=row.getText().toString();
-        String row_item=item.getText().toString();
-        if(checkBox.isChecked()) {
-            if (checkedList.contains(row_item))
-                checkedList.remove(row_item);
-        }
-        db.deleteIngredient(row_no);
-        Cursor newCursor = db.displayIngredients();
-        adapter.changeCursor(newCursor);
-        adapter.notifyDataSetChanged();
-    }*/
-
- /*   public void DeleteRowShopping(View v){
-        LinearLayout llMain = (LinearLayout)v.getParent();
-        TextView row=(TextView)llMain.getChildAt(0);
-        CheckBox checkBox = (CheckBox)llMain.getChildAt(1);
-        TextView item=(TextView)llMain.getChildAt(2);
-        String row_no=row.getText().toString();
-        String row_item=item.getText().toString();
-        if(checkBox.isChecked()) {
-            if (checkedList.contains(row_item))
-                checkedList.remove(row_item);
-        }
-        db.deleteShopping(row_no);
-        Cursor newCursor2 = db.displayShopping();
-        adapter2.changeCursor(newCursor2);
-        adapter2.notifyDataSetChanged();
-    }*/
-
     public void MoveRowIngredients(View v){
         LinearLayout llMain = (LinearLayout)v.getParent();
         TextView row=(TextView)llMain.getChildAt(0);
@@ -277,6 +243,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         Cursor newCursor2 = db.displayShopping();
         adapter2.changeCursor(newCursor2);
         adapter2.notifyDataSetChanged();
+        Toast toast = Toast.makeText(this, "\'"+row_item+"\' added to shopping list", Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     public void MoveRowShopping(View v){
@@ -293,6 +261,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         Cursor newCursor2 = db.displayShopping();
         adapter2.changeCursor(newCursor2);
         adapter2.notifyDataSetChanged();
+        Toast toast = Toast.makeText(this, "\'"+row_item+"\' added to ingredients list", Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     @Override
@@ -314,7 +284,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     @Override
     public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
-        return false;
+        float verticalDiff = motionEvent2.getY() - motionEvent.getY();
+        if(verticalDiff<0)
+            expandShopping(null);
+        else expandIngredients(null);
+        return true;
     }
 
     @Override
@@ -325,13 +299,9 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     @Override
     public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent2, float v, float v2) {
         float verticalDiff = motionEvent2.getY() - motionEvent.getY();
-        float absVDiff = Math.abs(verticalDiff);
-        float absVelocityY = Math.abs(v2);
-        if(absVelocityY>velocityMin && absVDiff>flingMin){
-            if(verticalDiff<0)
-                expandShopping(null);
-            else expandIngredients(null);
-        }
+        if(verticalDiff<0)
+            expandShopping(null);
+        else expandIngredients(null);
         return true;
     }
 
@@ -543,7 +513,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 @Override
                 public void onAnimationUpdate(ValueAnimator valueAnimator) {
                     float val = (Float) valueAnimator.getAnimatedValue();
-                    ViewGroup.LayoutParams layoutParams = ingredientsLayout.getLayoutParams();
                     ingredientsLayout.setLayoutParams(new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             0,
