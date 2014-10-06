@@ -11,16 +11,21 @@
 
     <!-- Header -->
     <LinearLayout android:id="@+id/header"
+        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#80ff6000"
         >
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_action_fridge_black" />
         <TextView android:id="@+id/ingredientsHeader"
             style="@android:style/TextAppearance.Holo.Large"
             android:layout_width="match_parent"
             android:layout_height="40dip"
             android:gravity="center_vertical"
-            android:text="My ingredients"
+            android:text="My fridge"
             android:onClick="expandIngredients"
             android:clickable="true"/>
     </LinearLayout>
@@ -59,7 +64,7 @@
                         android:paddingRight="5dp"
                         android:clickable="true"
                         android:onClick="OnAddingIngredients"
-                        android:src="@drawable/ic_action_done" />
+                        android:src="@drawable/ic_action_new" />
 
                 </LinearLayout>
                 <LinearLayout
@@ -84,6 +89,10 @@
         android:layout_height="wrap_content"
         android:background="#8087c600"
         android:orientation="horizontal">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:src="@drawable/ic_action_shopping_black" />
         <TextView android:id="@+id/shoppingHeader"
             style="@android:style/TextAppearance.Holo.Large"
             android:layout_width="match_parent"
@@ -129,7 +138,7 @@
                         android:paddingRight="5dp"
                         android:clickable="true"
                         android:onClick="OnAddingShopping"
-                        android:src="@drawable/ic_action_done" />
+                        android:src="@drawable/ic_action_new" />
 
                 </LinearLayout>
 

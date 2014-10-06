@@ -10,7 +10,7 @@
         android:orientation="vertical">
 
         <TextView
-            style="@android:style/TextAppearance.Holo.SearchResult.Title"
+            style="@android:style/TextAppearance.Holo.Large"
             android:id="@+id/name"
             android:text="Recipe name"
             android:layout_width="fill_parent"
@@ -28,6 +28,7 @@
             android:paddingBottom="4dip" />
         <TextView
             android:id="@+id/ingredients"
+            style="@android:style/TextAppearance.Holo.Widget.TextView"
             android:text="Ingredients: blah, blah, blah..."
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" />

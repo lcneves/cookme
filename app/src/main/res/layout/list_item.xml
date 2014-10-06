@@ -10,7 +10,7 @@
         android:orientation="vertical">
 
         <TextView
-            style="@android:style/TextAppearance.Holo.SearchResult.Title"
+            style="@android:style/TextAppearance.Holo.Large"
             android:id="@+id/name"
             android:text="Recipe name"
             android:layout_width="fill_parent"
@@ -32,19 +32,20 @@
             android:text="Matches: Nightshade Crimson root Eye of the Tiger"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textColor="#8000c600" />
+            android:textColor="#d0007f00" />
         <TextView
             style="@android:style/TextAppearance.Holo.Small"
             android:id="@+id/mismatches"
             android:text="Doesn't match: Nirnroot Fire salts"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textColor="#7fff0000"
+            android:textColor="#8e000000"
             android:includeFontPadding="false"
             android:paddingBottom="2dip">
         </TextView>
         <TextView
             android:id="@+id/ingredients"
+            style="@android:style/TextAppearance.Holo.Widget.TextView"
             android:text="Ingredients: blah, blah, blah..."
             android:layout_width="fill_parent"
             android:layout_height="wrap_content" />

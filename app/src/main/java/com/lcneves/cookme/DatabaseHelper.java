@@ -68,16 +68,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    public String getUrl(long id) {
-        String url = null;
+    public String[] getRecipe(long id) {
+        String[] recipe = new String[3];
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.query(recipesTable, new String[]{recURL}, recID+" = "+id, null, null, null, null);
+        Cursor cursor = db.query(recipesTable, new String[]{recName, recIngredients, recURL}, recID+" = "+id, null, null, null, null);
         if (cursor.moveToFirst()) {
-            url = cursor.getString(cursor.getColumnIndex(recURL));
+            recipe[0] = cursor.getString(cursor.getColumnIndex(recName));
+            recipe[1] = cursor.getString(cursor.getColumnIndex(recIngredients));
+            recipe[2] = cursor.getString(cursor.getColumnIndex(recURL));
         }
         cursor.close();
         db.close();
-        return url;
+        return recipe;
     }
 
     public Cursor displayIngredients() {

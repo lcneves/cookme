@@ -243,7 +243,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         Cursor newCursor2 = db.displayShopping();
         adapter2.changeCursor(newCursor2);
         adapter2.notifyDataSetChanged();
-        Toast toast = Toast.makeText(this, "\'"+row_item+"\' added to shopping list", Toast.LENGTH_SHORT);
+        Toast toast = Toast.makeText(this, "\'"+row_item+"\' moved to shopping list", Toast.LENGTH_SHORT);
         toast.show();
     }
 
@@ -261,7 +261,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         Cursor newCursor2 = db.displayShopping();
         adapter2.changeCursor(newCursor2);
         adapter2.notifyDataSetChanged();
-        Toast toast = Toast.makeText(this, "\'"+row_item+"\' added to ingredients list", Toast.LENGTH_SHORT);
+        Toast toast = Toast.makeText(this, "\'"+row_item+"\' moved to fridge", Toast.LENGTH_SHORT);
         toast.show();
     }
 
@@ -490,9 +490,13 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         TextView par1 = (TextView) messageView.findViewById(R.id.aboutPar1);
         TextView par4 = (TextView) messageView.findViewById(R.id.aboutPar4);
         TextView par5 = (TextView) messageView.findViewById(R.id.aboutPar5);
+        TextView par6 = (TextView) messageView.findViewById(R.id.aboutPar6);
+        TextView par7 = (TextView) messageView.findViewById(R.id.aboutPar7);
         Linkify.addLinks(par1, Linkify.WEB_URLS);
         Linkify.addLinks(par4, Linkify.WEB_URLS);
         Linkify.addLinks(par5, Linkify.WEB_URLS);
+        Linkify.addLinks(par6, Linkify.WEB_URLS);
+        Linkify.addLinks(par7, Linkify.WEB_URLS);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(messageView);
         builder.create();

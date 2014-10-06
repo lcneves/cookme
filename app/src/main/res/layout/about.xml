@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="Alpha version, for alpha testers only!"
+                android:text="1.0 alpha 7, for alpha testers only!"
                 android:id="@+id/textView2"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="15dp"/>
@@ -68,16 +68,29 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Turbomilk for the beautiful icon. Check out their work at http://turbomilk.com"
-                android:paddingBottom="10pt"
+                android:text="Turbomilk for the beautiful soup icon. Check out their work at http://turbomilk.com"
+                android:paddingBottom="3pt"
                 android:id="@+id/aboutPar5" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Happy cooking!"
+                android:text="Fridge clip art by http://icons8.com"
                 android:paddingBottom="3pt"
                 android:id="@+id/aboutPar6" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Shopping cart clip art by http://www.clker.com/clipart-shopping-cart-32.html"
+                android:paddingBottom="10pt"
+                android:id="@+id/aboutPar7" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Happy cooking!"
+                android:id="@+id/aboutPar8" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

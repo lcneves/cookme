@@ -13,11 +13,13 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.text.util.Linkify;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -129,6 +131,7 @@ public class SearchSimple extends ListActivity {
                         0);
                 setListAdapter(adapter);
                 lv = getListView();
+                registerForContextMenu(lv);
                 if(selIngredients != null) {
                     if(selIngredients.length > 2) {
                         View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
@@ -157,11 +160,57 @@ public class SearchSimple extends ListActivity {
     protected void onListItemClick(ListView l, View v, int pos, long id) {
         super.onListItemClick(l, v, pos, id);
         DatabaseHelper db = new DatabaseHelper(this);
-        String url = db.getUrl(id);
+        String[] recipe = db.getRecipe(id);
+        db.close();
         Intent intent = new Intent(this, RecipeViewer.class);
-        intent.putExtra("com.lcneves.cookme.URL", url);
+        intent.putExtra("com.lcneves.cookme.RECIPE", recipe);
         intent.putExtra("com.lcneves.cookme.ACTIVITY", "simple");
         startActivity(intent);
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
+//        menu.setHeaderTitle(Countries[info.position]);
+        String[] menuItems = new String[3];
+        menuItems[0] = "Open recipe webpage";
+        menuItems[1] = "Share recipe link";
+        menuItems[2] = "Share recipe ingredients";
+        for (int i = 0; i<menuItems.length; i++) {
+            menu.add(Menu.NONE, i, i, menuItems[i]);
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+        int menuItemIndex = item.getItemId();
+        DatabaseHelper db = new DatabaseHelper(this);
+        String[] recipe = db.getRecipe(info.id);
+        db.close();
+        switch (menuItemIndex) {
+            case 0:
+                Intent intent = new Intent(this, RecipeViewer.class);
+                intent.putExtra("com.lcneves.cookme.RECIPE", recipe);
+                intent.putExtra("com.lcneves.cookme.ACTIVITY", "simple");
+                startActivity(intent);
+                break;
+            case 1:
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, recipe[0]+": "+recipe[2]);
+                sendIntent.setType("text/plain");
+                startActivity(Intent.createChooser(sendIntent, "Share link with..."));
+                break;
+            case 2:
+                Intent sendIntent2 = new Intent();
+                sendIntent2.setAction(Intent.ACTION_SEND);
+                sendIntent2.putExtra(Intent.EXTRA_TEXT, recipe[0]+":\n\n"+recipe[1]+"\n\n"+recipe[2]);
+                sendIntent2.setType("text/plain");
+                startActivity(Intent.createChooser(sendIntent2, "Share recipe with..."));
+                break;
+        }
+        return true;
     }
 
     @Override
@@ -208,9 +257,13 @@ public class SearchSimple extends ListActivity {
         TextView par1 = (TextView) messageView.findViewById(R.id.aboutPar1);
         TextView par4 = (TextView) messageView.findViewById(R.id.aboutPar4);
         TextView par5 = (TextView) messageView.findViewById(R.id.aboutPar5);
+        TextView par6 = (TextView) messageView.findViewById(R.id.aboutPar6);
+        TextView par7 = (TextView) messageView.findViewById(R.id.aboutPar7);
         Linkify.addLinks(par1, Linkify.WEB_URLS);
         Linkify.addLinks(par4, Linkify.WEB_URLS);
         Linkify.addLinks(par5, Linkify.WEB_URLS);
+        Linkify.addLinks(par6, Linkify.WEB_URLS);
+        Linkify.addLinks(par7, Linkify.WEB_URLS);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(messageView);
         builder.create();
