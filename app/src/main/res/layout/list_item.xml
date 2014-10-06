@@ -7,6 +7,8 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:paddingRight="5dp"
+        android:paddingLeft="10dp"
         android:orientation="vertical">
 
         <TextView
@@ -15,17 +17,8 @@
             android:text="Recipe name"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textColor="#ffe05300"
+            android:textColor="#ffe6020e"
             android:paddingTop="6dip"/>
-        <TextView
-            style="@android:style/TextAppearance.Holo.SearchResult.Subtitle"
-            android:id="@+id/url"
-            android:text="http://www.example.com/mydeliciousrecipe"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:textColor="#5d5d5d"
-            android:gravity="start"
-            android:paddingBottom="4dip" />
         <TextView
             style="@android:style/TextAppearance.Holo.Small"
             android:id="@+id/matches"
@@ -48,7 +41,16 @@
             style="@android:style/TextAppearance.Holo.Widget.TextView"
             android:text="Ingredients: blah, blah, blah..."
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:paddingBottom="4dp"/>
+        <TextView
+            style="@android:style/TextAppearance.Holo.SearchResult.Subtitle"
+            android:id="@+id/url"
+            android:text="http://www.example.com/mydeliciousrecipe"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:textColor="#5d5d5d"
+            android:gravity="start" />
 
     </LinearLayout>
 

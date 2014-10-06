@@ -8,8 +8,8 @@ android {
         applicationId "com.lcneves.cookme"
         minSdkVersion 16
         targetSdkVersion 20
-        versionCode 7
-        versionName "1.0 alpha 7"
+        versionCode 8
+        versionName "1.0 alpha 8"
     }
     buildTypes {
         release {
