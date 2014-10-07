@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,6 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -177,6 +179,57 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
             startActivity(intent);
         }
+    }
+
+    public static class SearchDialogFragment extends DialogFragment {
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
+
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View v = inflater.inflate(R.layout.search_dialog, container, false);
+            Activity activity = (Activity)v.getContext();
+            DatabaseHelper dbSearch = new DatabaseHelper(activity);
+            ListView lvSearch = (ListView) v.findViewById(R.id.listview_fridge);
+            Cursor cursorSearch = dbSearch.displayIngredients();
+            MyCursorAdapter adapterSearch = new MyCursorAdapter(activity, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.search_ingredient }, 0);
+            lvSearch.setAdapter(adapterSearch);
+            ListView lvSearch2 = (ListView) v.findViewById(R.id.listview_shopping);
+            Cursor cursorSearch2 = dbSearch.displayShopping();
+            MyCursorAdapter adapterSearch2 = new MyCursorAdapter(activity, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.search_ingredient }, 0);
+            lvSearch2.setAdapter(adapterSearch2);
+            /*View tv = v.findViewById(R.id.text);
+            ((TextView)tv).setText("Dialog #" + mNum + ": using style "
+                    + getNameForNum(mNum));*/
+
+            // Watch for button clicks.
+            Button buttonSearch = (Button)v.findViewById(R.id.search_button);
+            buttonSearch.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    // When button is clicked, call up to owning activity.
+                }
+            });
+
+            Button buttonCancel = (Button)v.findViewById(R.id.search_cancel);
+            buttonCancel.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                }
+            });
+            return v;
+        }
+
+        @Override
+        public void onActivityCreated(Bundle savedInstanceState) {
+            super.onActivityCreated(savedInstanceState);
+            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        }
+
     }
 
     public void clickSearchByName(MenuItem menuitem) {
