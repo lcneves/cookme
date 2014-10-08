@@ -49,11 +49,10 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     static File fileOld = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameOld);
     DatabaseHelper db = new DatabaseHelper(this);
     static boolean databaseCheck = false;
-    MyCursorAdapter adapter;
-    MyCursorAdapter adapter2;
+    SimpleCursorAdapter adapter;
+    SimpleCursorAdapter adapter2;
     ListView lv;
     ListView lv2;
-    static List<String> checkedList = new LinkedList<String>();
     LinearLayout ingredientsLayout;
     static Cursor cursor;
     static Cursor cursor2;
@@ -87,12 +86,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
         lv = (ListView) findViewById(R.id.listview);
         cursor = db.displayIngredients();
-        adapter = new MyCursorAdapter(MainActivity.this, R.layout.ingredients_item, cursor, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
+        adapter = new SimpleCursorAdapter(MainActivity.this, R.layout.ingredients_item, cursor, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
         lv.setAdapter(adapter);
 
         lv2 = (ListView) findViewById(R.id.listview2);
         cursor2 = db.displayShopping();
-        adapter2 = new MyCursorAdapter(MainActivity.this, R.layout.shopping_item, cursor2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
+        adapter2 = new SimpleCursorAdapter(MainActivity.this, R.layout.shopping_item, cursor2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
         lv2.setAdapter(adapter2);
 
         // Create a ListView-specific touch listener. ListViews are given special treatment because
@@ -110,12 +109,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                             @Override
                             public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                                 for (int position : reverseSortedPositions) {
-                                    cursor = db.displayIngredients();
                                     String rowId = String.valueOf(adapter.getItemId(position));
-                                    cursor.moveToPosition(position);
-                                    String row_item = cursor.getString(cursor.getColumnIndex(DatabaseHelper.ingName));
-                                    if (checkedList.contains(row_item))
-                                        checkedList.remove(row_item);
                                     db.deleteIngredient(rowId);
                                 }
                                 cursor = db.displayIngredients();
@@ -143,12 +137,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                             @Override
                             public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                                 for (int position : reverseSortedPositions) {
-                                    cursor2 = db.displayShopping();
                                     String rowId = String.valueOf(adapter2.getItemId(position));
-                                    cursor2.moveToPosition(position);
-                                    String row_item = cursor2.getString(cursor2.getColumnIndex(DatabaseHelper.shoName));
-                                    if (checkedList.contains(row_item))
-                                        checkedList.remove(row_item);
                                     db.deleteShopping(rowId);
                                 }
                                 cursor2 = db.displayShopping();
@@ -167,7 +156,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
     }
 
-    public void searchRecipes(MenuItem menuItem) {
+/*    public void searchRecipes(MenuItem menuItem) {
 
         if(checkedList.isEmpty()) {
             Toast toast = Toast.makeText(this, "Use checkboxes to select ingredients", Toast.LENGTH_LONG);
@@ -179,30 +168,61 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
             startActivity(intent);
         }
+        intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString());
+        startActivity(intent);
+    }*/
+
+    public void checkBoxClick(View v) {
+        SearchDialogFragment.checkBoxClick(v);
     }
 
     public static class SearchDialogFragment extends DialogFragment {
 
+        Activity context;
+        static List<String> checkedList;
+
+        public static void checkBoxClick(View v) {
+            CheckBox checkBox = (CheckBox) v;
+            LinearLayout llMain = (LinearLayout)v.getParent();
+            TextView item=(TextView)llMain.getChildAt(2);
+            String row_item=item.getText().toString();
+            if(checkBox.isChecked()) {
+                if(!checkedList.contains(row_item)) {
+                    checkedList.add(row_item);
+                }
+            } else {
+                if(checkedList.contains(row_item)) {
+                    checkedList.remove(row_item);
+                }
+            }
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            context=activity;
+        }
+
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-
-
+            checkedList = new LinkedList<String>();
+            setStyle(DialogFragment.STYLE_NO_TITLE, android.R.style.Theme_Holo_Light_Dialog);
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.search_dialog, container, false);
-            Activity activity = (Activity)v.getContext();
-            DatabaseHelper dbSearch = new DatabaseHelper(activity);
+            DatabaseHelper dbSearch = new DatabaseHelper(context);
             ListView lvSearch = (ListView) v.findViewById(R.id.listview_fridge);
-            Cursor cursorSearch = dbSearch.displayIngredients();
-            MyCursorAdapter adapterSearch = new MyCursorAdapter(activity, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.search_ingredient }, 0);
+            final EditText input = (EditText) v.findViewById(R.id.editTextSearch);
+                    Cursor cursorSearch = dbSearch.displayIngredients();
+            MyCursorAdapter adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch.setAdapter(adapterSearch);
             ListView lvSearch2 = (ListView) v.findViewById(R.id.listview_shopping);
             Cursor cursorSearch2 = dbSearch.displayShopping();
-            MyCursorAdapter adapterSearch2 = new MyCursorAdapter(activity, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.search_ingredient }, 0);
+            MyCursorAdapter adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch2.setAdapter(adapterSearch2);
             /*View tv = v.findViewById(R.id.text);
             ((TextView)tv).setText("Dialog #" + mNum + ": using style "
@@ -211,52 +231,65 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             // Watch for button clicks.
             Button buttonSearch = (Button)v.findViewById(R.id.search_button);
             buttonSearch.setOnClickListener(new View.OnClickListener() {
+
+
                 public void onClick(View v) {
-                    // When button is clicked, call up to owning activity.
+                    boolean ingredients = false;
+                    boolean name = false;
+                    Intent intent = new Intent(context, SearchSimple.class);
+                    if(!checkedList.isEmpty()) {
+                        ingredients = true;
+                        String[] arrayList = checkedList.toArray(new String[(checkedList.size())]);
+                        intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
+                    }
+                    if (!input.getText().toString().trim().isEmpty()) {
+                        name = true;
+                        intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString().trim());
+                    }
+                    if (ingredients || name) {
+                        startActivity(intent);
+                        dismiss();
+                    }
+                    else {
+                        Toast toast = Toast.makeText(context, "Please fill in recipe name or choose ingredients", Toast.LENGTH_LONG);
+                        toast.show();
+                    }
                 }
             });
 
             Button buttonCancel = (Button)v.findViewById(R.id.search_cancel);
             buttonCancel.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
+                    dismiss();
                 }
             });
             return v;
         }
 
-        @Override
+/*        @Override
         public void onActivityCreated(Bundle savedInstanceState) {
             super.onActivityCreated(savedInstanceState);
             getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        }
+        }*/
 
     }
 
-    public void clickSearchByName(MenuItem menuitem) {
+    public void clickSearch(MenuItem menuitem) {
+        SearchDialogFragment searchDialog = new SearchDialogFragment();
+        searchDialog.show(getFragmentManager(), "tag");
+    }
+
+/*    public void clickSearchByName(MenuItem menuitem) {
         RecipeNameDialogFragment recipeNameDialog = new RecipeNameDialogFragment();
         recipeNameDialog.show(getFragmentManager(), "tag");
-    }
+
 
     public void clickSearchComposite(MenuItem menuitem) {
         CompositeDialogFragment compositeDialog = new CompositeDialogFragment();
         compositeDialog.show(getFragmentManager(), "tag");
-    }
+    }*/
 
-    public void CheckBoxClick(View v) {
-        CheckBox checkBox = (CheckBox) v;
-        LinearLayout llMain = (LinearLayout)v.getParent();
-        TextView item=(TextView)llMain.getChildAt(2);
-        String row_item=item.getText().toString();
-        if(checkBox.isChecked()) {
-            if(!checkedList.contains(row_item)) {
-                checkedList.add(row_item);
-            }
-        } else {
-            if(checkedList.contains(row_item)) {
-                checkedList.remove(row_item);
-            }
-        }
-    }
+
 
     public void OnAddingIngredients(View v){
         EditText editText = (EditText) findViewById(R.id.editText);
@@ -285,7 +318,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     public void MoveRowIngredients(View v){
         LinearLayout llMain = (LinearLayout)v.getParent();
         TextView row=(TextView)llMain.getChildAt(0);
-        TextView item=(TextView)llMain.getChildAt(2);
+        TextView item=(TextView)llMain.getChildAt(1);
         String row_no=row.getText().toString();
         String row_item=item.getText().toString();
         db.deleteIngredient(row_no);
@@ -303,7 +336,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     public void MoveRowShopping(View v){
         LinearLayout llMain = (LinearLayout)v.getParent();
         TextView row=(TextView)llMain.getChildAt(0);
-        TextView item=(TextView)llMain.getChildAt(2);
+        TextView item=(TextView)llMain.getChildAt(1);
         String row_no=row.getText().toString();
         String row_item=item.getText().toString();
         db.deleteShopping(row_no);
@@ -395,7 +428,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     }
 
-    public static class CompositeDialogFragment extends DialogFragment {
+/*    public static class CompositeDialogFragment extends DialogFragment {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
 
@@ -440,7 +473,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
 
-    }
+    }*/
 
     public static class DownloadParseDialogFragment extends DialogFragment {
         @Override
@@ -485,7 +518,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         }
     }
 
-    private class MyCursorAdapter extends SimpleCursorAdapter {
+    private static class MyCursorAdapter extends SimpleCursorAdapter {
 
         public MyCursorAdapter(Context context, int layout, Cursor c,
                                String[] from, int[] to, int flags) {
@@ -500,7 +533,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBox);
             TextView item = (TextView) view.findViewById(R.id.grocery);
             String row_item = item.getText().toString();
-            if (checkedList.contains(row_item)) {
+            if (SearchDialogFragment.checkedList.contains(row_item)) {
                 checkBox.setChecked(true);
             } else {
                 checkBox.setChecked(false);

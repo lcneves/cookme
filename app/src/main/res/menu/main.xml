@@ -4,8 +4,9 @@
     <!-- Search, should appear as action button -->
     <item android:id="@+id/action_search"
         android:title="@string/action_search"
-        android:showAsAction="always|withText">
-        <menu>
+        android:showAsAction="always|withText"
+        android:onClick="clickSearch">
+<!--        <menu>
             <item android:id="@+id/action_name_search"
                 android:title="@string/action_name_search"
                 android:onClick="clickSearchByName"/>
@@ -17,7 +18,7 @@
             <item android:id="@+id/action_composite_search"
                 android:title="@string/action_composite_search"
                 android:onClick="clickSearchComposite"/>
-        </menu>
+        </menu>-->
     </item>
     <item android:id="@+id/action_clearDb"
         android:title="@string/action_clearDb"

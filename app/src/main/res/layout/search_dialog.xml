@@ -3,16 +3,37 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#8e7f7f7f"
+        android:orientation="horizontal">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_action_search"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Search recipes"
+            android:layout_gravity="center_vertical"
+            style="@android:style/TextAppearance.Holo.Large"/>
+    </LinearLayout>
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/editText"
+        android:paddingTop="10dp"
+        android:id="@+id/editTextSearch"
         android:hint="Recipe name"
+        android:imeOptions="actionDone"
+        android:singleLine="true"
         android:layout_gravity="center_horizontal" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:paddingTop="10dp"
         android:orientation="horizontal">
         <ListView android:id="@+id/listview_fridge"
             android:layout_height="wrap_content"

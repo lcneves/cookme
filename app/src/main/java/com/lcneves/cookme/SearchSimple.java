@@ -100,7 +100,15 @@ public class SearchSimple extends ListActivity {
                 }
             }
             Log.d("com.lcneves.cookme.SearchSimple", "whereCondition is: " + whereCondition);
-            cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL, recLength}, whereCondition, null, null, null, recLength);
+            if (selIngredients != null) {
+                if(selIngredients.length > 1) {
+                    cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL, recLength}, whereCondition, null, null, null, recLength);
+                } else {
+                    cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
+                }
+            } else {
+                cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
+            }
             Log.d("com.lcneves.cookme.SearchResults", "Simple search took " + (((System.nanoTime() - startTime)) / 1000000)+" ms");
             return null;
         }
@@ -140,12 +148,26 @@ public class SearchSimple extends ListActivity {
                 }
             } else {
                 if(selIngredients != null) {
-                    Toast toast = Toast.makeText(SearchSimple.this, "No recipes found with all the selected ingredients...", Toast.LENGTH_LONG);
-                    toast.show();
-                    Intent intent = new Intent(SearchSimple.this, SearchResults.class);
-                    intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
-                    intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
-                    startActivity(intent);
+                    if(selIngredients.length > 1) {
+                        Toast toast = Toast.makeText(SearchSimple.this, "No recipes found with all the selected ingredients...", Toast.LENGTH_LONG);
+                        toast.show();
+                        Intent intent = new Intent(SearchSimple.this, SearchResults.class);
+                        intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
+                        intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
+                        startActivity(intent);
+                    } else {
+                        if (recipeName != null) {
+                            Toast toast = Toast.makeText(SearchSimple.this, "No recipes for \""+recipeName+"\" found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
+                            toast.show();
+                            Intent intent = new Intent(SearchSimple.this, MainActivity.class);
+                            startActivity(intent);
+                        } else {
+                            Toast toast = Toast.makeText(SearchSimple.this, "No recipes found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
+                            toast.show();
+                            Intent intent = new Intent(SearchSimple.this, MainActivity.class);
+                            startActivity(intent);
+                        }
+                    }
                 } else {
                     Toast toast = Toast.makeText(SearchSimple.this, "No recipes found with the name \""+recipeName+"\"", Toast.LENGTH_LONG);
                     toast.show();
