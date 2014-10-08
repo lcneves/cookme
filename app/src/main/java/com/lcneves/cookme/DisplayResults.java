@@ -136,21 +136,8 @@ public class DisplayResults extends ListActivity {
     }
 
     public void clickAboutMenuDisplay(MenuItem menu) {
-        View messageView = getLayoutInflater().inflate(R.layout.about, null, false);
-        TextView par1 = (TextView) messageView.findViewById(R.id.aboutPar1);
-        TextView par4 = (TextView) messageView.findViewById(R.id.aboutPar4);
-        TextView par5 = (TextView) messageView.findViewById(R.id.aboutPar5);
-        TextView par6 = (TextView) messageView.findViewById(R.id.aboutPar6);
-        TextView par7 = (TextView) messageView.findViewById(R.id.aboutPar7);
-        Linkify.addLinks(par1, Linkify.WEB_URLS);
-        Linkify.addLinks(par4, Linkify.WEB_URLS);
-        Linkify.addLinks(par5, Linkify.WEB_URLS);
-        Linkify.addLinks(par6, Linkify.WEB_URLS);
-        Linkify.addLinks(par7, Linkify.WEB_URLS);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(messageView);
-        builder.create();
-        builder.show();
+        MainActivity.AboutDialogFragment aboutDialog = new MainActivity.AboutDialogFragment();
+        aboutDialog.show(getFragmentManager(), "tag");
     }
 
     @Override

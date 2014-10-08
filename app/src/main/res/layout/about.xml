@@ -3,19 +3,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:minWidth="500dip"
     android:padding="20dp"
-    android:background="#2dffbf00"
     >
     <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="580dip"
         android:fillViewport="true">
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            >
+            android:layout_height="wrap_content">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -30,17 +30,24 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="1.0 alpha 9, for alpha testers only!"
+                android:text="1.0 alpha 10, for alpha testers only!"
                 android:id="@+id/textView2"
                 android:layout_gravity="center_horizontal"
-                android:paddingBottom="15dp"/>
+                android:paddingBottom="0dp"/>
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_launcher"
+                android:layout_gravity="center"/>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Cook me! is free software under the MIT license. The source code, the license document and the author's contact info can be found at https://github.com/lcneves/cookme"
-                android:paddingBottom="10pt"
+                android:paddingTop="5dp"
+                android:paddingBottom="10dp"
                 android:id="@+id/aboutPar1" />
             <TextView
                 android:layout_width="match_parent"
@@ -48,49 +55,67 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Special thanks to:"
                 android:textStyle="bold"
-                android:paddingBottom="3pt"
+                android:paddingBottom="3dp"
                 android:id="@+id/aboutPar2" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Maria Savchenko, for the brilliant idea;"
-                android:paddingBottom="3pt"
+                android:paddingBottom="3dp"
                 android:id="@+id/aboutPar3" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="The OpenRecipes project by Fictive Kin, for the huge recipes database. Please visit https://github.com/fictivekin/openrecipes to support that awesome project and for license details."
-                android:paddingBottom="3pt"
+                android:paddingBottom="3dp"
                 android:id="@+id/aboutPar4" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Turbomilk for the beautiful soup icon. Check out their work at http://turbomilk.com"
-                android:paddingBottom="3pt"
+                android:paddingBottom="3dp"
                 android:id="@+id/aboutPar5" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Fridge clip art by http://icons8.com"
-                android:paddingBottom="3pt"
+                android:paddingBottom="3dp"
                 android:id="@+id/aboutPar6" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Shopping cart clip art by http://www.clker.com/clipart-shopping-cart-32.html"
-                android:paddingBottom="10pt"
+                android:paddingBottom="6dp"
                 android:id="@+id/aboutPar7" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Happy cooking!"
+                android:paddingBottom="6dp"
                 android:id="@+id/aboutPar8" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/rate_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Rate it!"/>
+                <Button
+                    android:id="@+id/close_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Close"/>
+                </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

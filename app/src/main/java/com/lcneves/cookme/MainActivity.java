@@ -1,52 +1,40 @@
 package com.lcneves.cookme;
 
-import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.text.util.Linkify;
 import android.util.Log;
-import android.view.Display;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupMenu;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 
 public class MainActivity extends Activity implements GestureDetector.OnGestureListener {
 
-    static String fileNameOld = "recipeitems-latest.json";
-    static File fileOld = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameOld);
     DatabaseHelper db = new DatabaseHelper(this);
     static boolean databaseCheck = false;
     SimpleCursorAdapter adapter;
@@ -150,27 +138,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         // we don't look for swipes.
         lv2.setOnScrollListener(touchListener2.makeScrollListener());
 
-        if(db.verifyRecipesTable() == false && databaseCheck == false) {
+        if(!db.verifyRecipesTable() && !databaseCheck) {
             DownloadParseDialogFragment dialogDownloadParse = new DownloadParseDialogFragment();
             dialogDownloadParse.show(getFragmentManager(), "tag");
         }
     }
-
-/*    public void searchRecipes(MenuItem menuItem) {
-
-        if(checkedList.isEmpty()) {
-            Toast toast = Toast.makeText(this, "Use checkboxes to select ingredients", Toast.LENGTH_LONG);
-            toast.show();
-        } else {
-            String[] arrayList = new String[checkedList.size()];
-            arrayList = checkedList.toArray(arrayList);
-            Intent intent = new Intent(this, SearchSimple.class);
-            intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
-            startActivity(intent);
-        }
-        intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString());
-        startActivity(intent);
-    }*/
 
     public void checkBoxClick(View v) {
         SearchDialogFragment.checkBoxClick(v);
@@ -216,19 +188,16 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             View v = inflater.inflate(R.layout.search_dialog, container, false);
             DatabaseHelper dbSearch = new DatabaseHelper(context);
             ListView lvSearch = (ListView) v.findViewById(R.id.listview_fridge);
+            final InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
             final EditText input = (EditText) v.findViewById(R.id.editTextSearch);
-                    Cursor cursorSearch = dbSearch.displayIngredients();
+            input.clearFocus();
+            Cursor cursorSearch = dbSearch.displayIngredients();
             MyCursorAdapter adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch.setAdapter(adapterSearch);
             ListView lvSearch2 = (ListView) v.findViewById(R.id.listview_shopping);
             Cursor cursorSearch2 = dbSearch.displayShopping();
             MyCursorAdapter adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch2.setAdapter(adapterSearch2);
-            /*View tv = v.findViewById(R.id.text);
-            ((TextView)tv).setText("Dialog #" + mNum + ": using style "
-                    + getNameForNum(mNum));*/
-
-            // Watch for button clicks.
             Button buttonSearch = (Button)v.findViewById(R.id.search_button);
             buttonSearch.setOnClickListener(new View.OnClickListener() {
 
@@ -237,6 +206,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                     boolean ingredients = false;
                     boolean name = false;
                     Intent intent = new Intent(context, SearchSimple.class);
+                    imm.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
                     if(!checkedList.isEmpty()) {
                         ingredients = true;
                         String[] arrayList = checkedList.toArray(new String[(checkedList.size())]);
@@ -260,36 +230,74 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             Button buttonCancel = (Button)v.findViewById(R.id.search_cancel);
             buttonCancel.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
+                    imm.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
                     dismiss();
                 }
             });
             return v;
         }
+    }
 
-/*        @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        }*/
+    public static class AboutDialogFragment extends DialogFragment {
 
+        Activity context;
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+            context=activity;
+        }
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setStyle(DialogFragment.STYLE_NO_TITLE, android.R.style.Theme_Holo_Light_Dialog);
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View messageView = inflater.inflate(R.layout.about, container, false);
+            TextView par1 = (TextView) messageView.findViewById(R.id.aboutPar1);
+            TextView par4 = (TextView) messageView.findViewById(R.id.aboutPar4);
+            TextView par5 = (TextView) messageView.findViewById(R.id.aboutPar5);
+            TextView par6 = (TextView) messageView.findViewById(R.id.aboutPar6);
+            TextView par7 = (TextView) messageView.findViewById(R.id.aboutPar7);
+            Linkify.addLinks(par1, Linkify.WEB_URLS);
+            Linkify.addLinks(par4, Linkify.WEB_URLS);
+            Linkify.addLinks(par5, Linkify.WEB_URLS);
+            Linkify.addLinks(par6, Linkify.WEB_URLS);
+            Linkify.addLinks(par7, Linkify.WEB_URLS);
+            /*AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setView(messageView);
+            builder.create();
+            builder.show();*/
+            Button buttonRate = (Button)messageView.findViewById(R.id.rate_button);
+            buttonRate.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Uri uri = Uri.parse("market://details?id=" + context.getPackageName());
+                    Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+                    try {
+                        context.startActivity(goToMarket);
+                    } catch (Exception e) {
+                        Log.e("com.lcneves.cookme.MainActivity",Log.getStackTraceString(e));
+                    }
+                }
+            });
+            Button buttonCancel = (Button)messageView.findViewById(R.id.close_button);
+            buttonCancel.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    dismiss();
+                }
+            });
+            return messageView;
+        }
     }
 
     public void clickSearch(MenuItem menuitem) {
         SearchDialogFragment searchDialog = new SearchDialogFragment();
         searchDialog.show(getFragmentManager(), "tag");
     }
-
-/*    public void clickSearchByName(MenuItem menuitem) {
-        RecipeNameDialogFragment recipeNameDialog = new RecipeNameDialogFragment();
-        recipeNameDialog.show(getFragmentManager(), "tag");
-
-
-    public void clickSearchComposite(MenuItem menuitem) {
-        CompositeDialogFragment compositeDialog = new CompositeDialogFragment();
-        compositeDialog.show(getFragmentManager(), "tag");
-    }*/
-
-
 
     public void OnAddingIngredients(View v){
         EditText editText = (EditText) findViewById(R.id.editText);
@@ -391,94 +399,9 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         return true;
     }
 
-    public static class RecipeNameDialogFragment extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            final Context context = getActivity();
-            final EditText input = new EditText(context);
-            // Use the Builder class for convenient dialog construction
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setMessage("What recipe are you looking for?")
-                    .setView(input)
-                    .setPositiveButton("Search", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            if (input.getText().toString().isEmpty()) {
-                                Toast toast = Toast.makeText(context, "Recipe name cannot be blank", Toast.LENGTH_LONG);
-                                toast.show();
-                            } else {
-                                Intent intent = new Intent(context, SearchSimple.class);
-                                intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString());
-                                startActivity(intent);
-                            }
-                        }
-                    })
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                        }
-                    });
-            // Create the AlertDialog object and return it
-            return builder.create();
-        }
-
-        @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        }
-
-    }
-
-/*    public static class CompositeDialogFragment extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-
-            final Context context = getActivity();
-            final EditText input = new EditText(context);
-
-            if(checkedList.isEmpty()) {
-                Toast toast = Toast.makeText(context, "Use checkboxes to select ingredients", Toast.LENGTH_LONG);
-                toast.show();
-                this.dismiss();
-            }
-            // Use the Builder class for convenient dialog construction
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setMessage("What recipe are you looking for?")
-                    .setView(input)
-                    .setPositiveButton("Search", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            if(input.getText().toString().isEmpty()) {
-                                Toast toast = Toast.makeText(context, "Recipe name cannot be blank", Toast.LENGTH_LONG);
-                                toast.show();
-                            } else {
-                                String[] arrayList = new String[checkedList.size()];
-                                arrayList = checkedList.toArray(arrayList);
-                                Intent intent = new Intent(context, SearchSimple.class);
-                                intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString());
-                                intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
-                                startActivity(intent);
-                            }
-                        }
-                    })
-                    .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                        }
-                    });
-            // Create the AlertDialog object and return it
-            return builder.create();
-        }
-
-        @Override
-        public void onActivityCreated(Bundle savedInstanceState) {
-            super.onActivityCreated(savedInstanceState);
-            getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        }
-
-    }*/
-
     public static class DownloadParseDialogFragment extends DialogFragment {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage("Database empty. Download and parse recipes?")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -492,7 +415,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                             databaseCheck = true;
                         }
                     });
-            // Create the AlertDialog object and return it
             return builder.create();
         }
     }
@@ -500,7 +422,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     public static class UpdateDBDialogFragment extends DialogFragment {
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            // Use the Builder class for convenient dialog construction
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage("Do you want to download and import the newest recipes database?")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -513,7 +434,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                         public void onClick(DialogInterface dialog, int id) {
                         }
                     });
-            // Create the AlertDialog object and return it
             return builder.create();
         }
     }
@@ -528,7 +448,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
-            //get reference to the row
             View view = super.getView(position, convertView, parent);
             CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBox);
             TextView item = (TextView) view.findViewById(R.id.grocery);
@@ -555,14 +474,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        /*
-        if (id == R.id.action_settings) {
-            return true;
-        }*/
-        /*if (id == R.id.action_search) {
-            searchRecipes(checkedList);
-            return true;
-        }*/
         if (id == R.id.action_clearDb) {
             UpdateDBDialogFragment updateDBDialog = new UpdateDBDialogFragment();
             updateDBDialog.show(getFragmentManager(), "tag");
@@ -572,28 +483,9 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     }
 
     public void clickAboutMenuMain(MenuItem menu) {
-        View messageView = getLayoutInflater().inflate(R.layout.about, null, false);
-        TextView par1 = (TextView) messageView.findViewById(R.id.aboutPar1);
-        TextView par4 = (TextView) messageView.findViewById(R.id.aboutPar4);
-        TextView par5 = (TextView) messageView.findViewById(R.id.aboutPar5);
-        TextView par6 = (TextView) messageView.findViewById(R.id.aboutPar6);
-        TextView par7 = (TextView) messageView.findViewById(R.id.aboutPar7);
-        Linkify.addLinks(par1, Linkify.WEB_URLS);
-        Linkify.addLinks(par4, Linkify.WEB_URLS);
-        Linkify.addLinks(par5, Linkify.WEB_URLS);
-        Linkify.addLinks(par6, Linkify.WEB_URLS);
-        Linkify.addLinks(par7, Linkify.WEB_URLS);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setView(messageView);
-        builder.create();
-        builder.show();
+        AboutDialogFragment aboutDialog = new AboutDialogFragment();
+        aboutDialog.show(getFragmentManager(), "tag");
     }
-
-    /*public void showPopup(MenuItem v) {
-        PopupMenu popup = new PopupMenu(this, v);
-        popup.inflate(R.menu.search_menu);
-        popup.show();
-    }*/
 
     public void expandIngredients (View v) {
         float ingredientsWeight = ((LinearLayout.LayoutParams) ingredientsLayout.getLayoutParams()).weight;
@@ -623,7 +515,6 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 @Override
                 public void onAnimationUpdate(ValueAnimator valueAnimator) {
                     float val = (Float) valueAnimator.getAnimatedValue();
-                    ViewGroup.LayoutParams layoutParams = ingredientsLayout.getLayoutParams();
                     ingredientsLayout.setLayoutParams(new LinearLayout.LayoutParams(
                             LinearLayout.LayoutParams.MATCH_PARENT,
                             0,
