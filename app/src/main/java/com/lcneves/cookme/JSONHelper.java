@@ -1,14 +1,15 @@
 package com.lcneves.cookme;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.ContentValues;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.JsonReader;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.util.Log;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -36,8 +37,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 public class JSONHelper extends Activity {
@@ -50,22 +49,40 @@ public class JSONHelper extends Activity {
     static final String recURL="URL";
     static final String recLength="Length";
     static final String recipesTable="Recipes";
-    static String fileNameOld = "recipeitems-latest.json";
-    static String fileNameNew = "recipeitems-edited.json";
-    static String fileNameGz = "recipeitems-latest.json.gz";
-    static File fileOld = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameOld);
-    static File fileNew = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameNew);
-    static File fileGz = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileNameGz);
+    static final String fileNameOld = "recipeitems-latest.json";
+    static final String fileNameNew = "recipeitems-edited.json";
+    static final String fileNameGz = "recipeitems-latest.json.gz";
+    static File fileDir;
+    static File fileOld;
+    static File fileNew;
+    static File fileGz;
     static String JSONUrl = "http://openrecipes.s3.amazonaws.com/recipeitems-latest.json.gz";
     private int lineCount = 0;
     Context context = JSONHelper.this;
     ProgressDialog mProgressDialog;
+    DatabaseHelper database = new DatabaseHelper(this);
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_jsonhelper);
+        if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+            if(context.getExternalFilesDir(null).getFreeSpace() > 314572800) {
+                fileDir = context.getExternalFilesDir(null);
+            }
+        } else {
+            if(context.getFilesDir().getFreeSpace() > 314572800) {
+                fileDir = context.getFilesDir();
+            } else {
+                FreeSpaceDialogFragment dialogFreeSpace = new FreeSpaceDialogFragment();
+                dialogFreeSpace.show(getFragmentManager(), "tag");
+            }
+        }
+        Log.d("com.lcneves.cookme.JSONHelper", "fileDir = "+fileDir.toString());
+        fileOld = new File(fileDir, fileNameOld);
+        fileNew = new File(fileDir, fileNameNew);
+        fileGz = new File(fileDir, fileNameGz);
 
         downloadJSON(JSONUrl);
     }
@@ -93,7 +110,7 @@ public class JSONHelper extends Activity {
 
     private void downloadJSON(String url) {
         mProgressDialog = new ProgressDialog(JSONHelper.this);
-        mProgressDialog.setMessage("Downloading...");
+        mProgressDialog.setMessage("Cleaning old database...");
         mProgressDialog.setIndeterminate(true);
         mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         mProgressDialog.setCancelable(true);
@@ -156,6 +173,7 @@ public class JSONHelper extends Activity {
             InputStream input = null;
             OutputStream output = null;
             HttpURLConnection connection = null;
+            database.recreateDatabase();
             if(fileGz.exists())
                 fileGz.delete();
             if(fileOld.exists())
@@ -326,6 +344,8 @@ public class JSONHelper extends Activity {
             mWakeLock.release();
             mProgressDialog.dismiss();
             if (result == null)
+                if(fileGz.exists())
+                    fileGz.delete();
                 rebuildJSON(fileOld, fileNew);
         }
     }
@@ -343,7 +363,6 @@ public class JSONHelper extends Activity {
         protected String doInBackground(File... fileInOut) {
             if(fileInOut[1].exists())
                 fileInOut[1].delete();
-
             FileInputStream fileStream = null;
             try {
                 fileStream = new FileInputStream(fileInOut[0]);
@@ -398,6 +417,8 @@ public class JSONHelper extends Activity {
             mWakeLock.release();
             mProgressDialog.dismiss();
             if (result == null) {
+                if(fileOld.exists())
+                    fileOld.delete();
                 parseJSON();
             }
         }
@@ -414,9 +435,6 @@ public class JSONHelper extends Activity {
 
         @Override
         protected String doInBackground(final String... args) {
-            DatabaseHelper database = new DatabaseHelper(getApplicationContext());
-            database.recreateDatabase();
-
             SQLiteDatabase db = database.getWritableDatabase();
             db.beginTransaction();
             JsonReader jsonReader = null;
@@ -507,6 +525,21 @@ public class JSONHelper extends Activity {
                 Intent intent = new Intent(JSONHelper.this, MainActivity.class);
                 startActivity(intent);
             }
+        }
+    }
+
+    public static class FreeSpaceDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("This device does not have enough free space to import the database. Please free at least 300 MB and try again.")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                            startActivity(intent);
+                        }
+                    });
+            return builder.create();
         }
     }
 }

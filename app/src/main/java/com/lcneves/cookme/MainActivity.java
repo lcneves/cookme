@@ -350,8 +350,13 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     }
 
     public void clickSearch(MenuItem menuitem) {
-        SearchDialogFragment searchDialog = new SearchDialogFragment();
-        searchDialog.show(getFragmentManager(), "tag");
+        if(db.verifyRecipesTable()) {
+            SearchDialogFragment searchDialog = new SearchDialogFragment();
+            searchDialog.show(getFragmentManager(), "tag");
+        } else {
+            DownloadParseDialogFragment dialogDownloadParse = new DownloadParseDialogFragment();
+            dialogDownloadParse.show(getFragmentManager(), "tag");
+        }
     }
 
     public void OnAddingIngredients(View v){
@@ -458,14 +463,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage("Database empty. Download and parse recipes?")
+            builder.setMessage("Do you want to download and parse recipes database? This will take a couple of minutes and needs to be done only once.")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             Intent intent = new Intent(getActivity(), JSONHelper.class);
                             startActivity(intent);
                         }
                     })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    .setNegativeButton("Not now", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             databaseCheck = true;
                         }
