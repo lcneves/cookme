@@ -24,6 +24,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -152,6 +153,8 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
         Activity context;
         static List<String> checkedList;
+        boolean checkAllIngredients = false;
+        boolean checkAllShopping = false;
 
         public static void checkBoxClick(View v) {
             CheckBox checkBox = (CheckBox) v;
@@ -187,14 +190,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                                  Bundle savedInstanceState) {
             View v = inflater.inflate(R.layout.search_dialog, container, false);
             DatabaseHelper dbSearch = new DatabaseHelper(context);
-            ListView lvSearch = (ListView) v.findViewById(R.id.listview_fridge);
+            final ListView lvSearch = (ListView) v.findViewById(R.id.listview_fridge);
             final InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
             final EditText input = (EditText) v.findViewById(R.id.editTextSearch);
             input.clearFocus();
             Cursor cursorSearch = dbSearch.displayIngredients();
             MyCursorAdapter adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch.setAdapter(adapterSearch);
-            ListView lvSearch2 = (ListView) v.findViewById(R.id.listview_shopping);
+            final ListView lvSearch2 = (ListView) v.findViewById(R.id.listview_shopping);
             Cursor cursorSearch2 = dbSearch.displayShopping();
             MyCursorAdapter adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch2.setAdapter(adapterSearch2);
@@ -232,6 +235,58 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 public void onClick(View v) {
                     imm.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
                     dismiss();
+                }
+            });
+
+            ImageView selectIngredients = (ImageView)v.findViewById(R.id.select_all_ingredients);
+            selectIngredients.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    View view;
+                    CheckBox checkBox;
+                    for (int i = 0; i < lvSearch.getCount(); i++) {
+                        view = lvSearch.getChildAt(i);
+                        checkBox = (CheckBox) view.findViewById(R.id.checkBox);
+                        TextView item=(TextView) view.findViewById(R.id.grocery);
+                        String row_item=item.getText().toString();
+                        if(!checkAllIngredients) {
+                            checkBox.setChecked(true);
+                            if(!checkedList.contains(row_item)) {
+                                checkedList.add(row_item);
+                            }
+                        } else {
+                            checkBox.setChecked(false);
+                            if(checkedList.contains(row_item)) {
+                                checkedList.remove(row_item);
+                            }
+                        }
+                    }
+                    checkAllIngredients = !checkAllIngredients;
+                }
+            });
+
+            ImageView selectShopping = (ImageView)v.findViewById(R.id.select_all_shopping);
+            selectShopping.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    View view;
+                    CheckBox checkBox;
+                    for (int i = 0; i < lvSearch2.getCount(); i++) {
+                        view = lvSearch2.getChildAt(i);
+                        checkBox = (CheckBox) view.findViewById(R.id.checkBox);
+                        TextView item=(TextView) view.findViewById(R.id.grocery);
+                        String row_item=item.getText().toString();
+                        if(!checkAllShopping) {
+                            checkBox.setChecked(true);
+                            if(!checkedList.contains(row_item)) {
+                                checkedList.add(row_item);
+                            }
+                        } else {
+                            checkBox.setChecked(false);
+                            if(checkedList.contains(row_item)) {
+                                checkedList.remove(row_item);
+                            }
+                        }
+                    }
+                    checkAllShopping = !checkAllShopping;
                 }
             });
             return v;

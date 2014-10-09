@@ -20,10 +20,13 @@
             android:layout_gravity="center_vertical"
             style="@android:style/TextAppearance.Holo.Large"/>
     </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="10dp">
+    </LinearLayout>
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="10dp"
         android:id="@+id/editTextSearch"
         android:hint="Recipe name"
         android:imeOptions="actionDone"
@@ -32,9 +35,65 @@
         android:inputType="text"/>
     <LinearLayout
         android:layout_width="match_parent"
+        android:layout_height="10dp">
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="3dp"
+        android:paddingRight="3dp"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#7fe6020e">
+            <ImageView
+                android:id="@+id/select_all_ingredients"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="-3dp"
+                android:src="@drawable/ic_action_select_all"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_action_fridge"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="6dp"
+            android:layout_height="0dp">
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#7f4ca025">
+            <ImageView
+                android:id="@+id/select_all_shopping"
+                android:clickable="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="-3dp"
+                android:src="@drawable/ic_action_select_all"/>
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_action_shopping"/>
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingTop="10dp"
         android:orientation="horizontal">
         <ListView android:id="@+id/listview_fridge"
             android:layout_height="wrap_content"

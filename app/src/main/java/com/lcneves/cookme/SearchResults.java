@@ -15,6 +15,7 @@ import android.util.JsonReader;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
@@ -85,7 +86,7 @@ public class SearchResults extends Activity {
         mProgressDialog = new ProgressDialog(SearchResults.this);
         mProgressDialog.setMessage("Searching recipes...");
         mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        mProgressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progress_dialog_anim));
         mProgressDialog.setCancelable(false);
 
         final SearchTask searchTask = new SearchTask(SearchResults.this);
