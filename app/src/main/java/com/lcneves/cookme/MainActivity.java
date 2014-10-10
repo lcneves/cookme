@@ -264,6 +264,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                 }
             });
 
+            LinearLayout ingredientsBar = (LinearLayout)v.findViewById(R.id.ingredients_bar);
+            LinearLayout shoppingBar = (LinearLayout)v.findViewById(R.id.shopping_bar);
+            if(cursorSearch.getCount() == 0) ingredientsBar.setVisibility(View.INVISIBLE);
+            if(cursorSearch2.getCount() == 0) shoppingBar.setVisibility(View.INVISIBLE);
+
             ImageView selectShopping = (ImageView)v.findViewById(R.id.select_all_shopping);
             selectShopping.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -463,7 +468,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage("Do you want to download and parse recipes database? This will take a couple of minutes and needs to be done only once.")
+            builder.setMessage("Do you want to download and import recipes database? This will take a couple of minutes and needs to be done only once.")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             Intent intent = new Intent(getActivity(), JSONHelper.class);

@@ -2,9 +2,12 @@ package com.lcneves.cookme;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -38,8 +41,8 @@ public class SearchSimple extends ListActivity {
     private ListActivity activity = SearchSimple.this;
     ListView lv;
     ProgressDialog mProgressDialog;
-    String[] selIngredients;
-    String recipeName;
+    static String[] selIngredients;
+    static String recipeName;
     String selIngredientsDummy = null;
     static final String recipesTable="Recipes";
     static final String recID="_id";
@@ -149,12 +152,8 @@ public class SearchSimple extends ListActivity {
             } else {
                 if(selIngredients != null) {
                     if(selIngredients.length > 1) {
-                        Toast toast = Toast.makeText(SearchSimple.this, "No recipes found with all the selected ingredients...", Toast.LENGTH_LONG);
-                        toast.show();
-                        Intent intent = new Intent(SearchSimple.this, SearchResults.class);
-                        intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
-                        intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
-                        startActivity(intent);
+                        SearchMoreDialogFragment searchMoreDialog = new SearchMoreDialogFragment();
+                        searchMoreDialog.show(getFragmentManager(), "tag");
                     } else {
                         if (recipeName != null) {
                             Toast toast = Toast.makeText(SearchSimple.this, "No recipes for \""+recipeName+"\" found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
@@ -175,6 +174,30 @@ public class SearchSimple extends ListActivity {
                     startActivity(intent);
                 }
             }
+        }
+    }
+
+
+    public static class SearchMoreDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("No recipes found with all the selected ingredients. Do you want to search for recipes that use only some of your ingredients?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent intent = new Intent(getActivity(), SearchResults.class);
+                            intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
+                            intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                            startActivity(intent);
+                        }
+                    });
+            return builder.create();
         }
     }
 

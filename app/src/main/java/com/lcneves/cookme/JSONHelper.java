@@ -210,6 +210,9 @@ public class JSONHelper extends Activity {
                         input.close();
                         if(fileGz.exists())
                             fileGz.delete();
+                        database.dropRecipes();
+                        Intent intent = new Intent(JSONHelper.this, MainActivity.class);
+                        startActivity(intent);
                         return null;
                     }
                     total += count;

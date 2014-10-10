@@ -44,6 +44,7 @@
         android:paddingRight="3dp"
         android:orientation="horizontal">
         <LinearLayout
+            android:id="@+id/ingredients_bar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -69,6 +70,7 @@
             android:layout_height="0dp">
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/shopping_bar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"

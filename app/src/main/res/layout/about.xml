@@ -4,13 +4,14 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:minWidth="500dip"
-    android:padding="20dp"
-    >
+    android:paddingTop="20dp"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:minWidth="500dip">
     <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="580dip"
+        android:layout_weight="1"
+        android:layout_height="0dp"
         android:fillViewport="true">
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:orientation="vertical"
@@ -30,7 +31,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="1.0 alpha 12, for alpha testers only!"
+                android:text="1.0 Release Candidate 1"
                 android:id="@+id/textView2"
                 android:layout_gravity="center_horizontal"
                 android:paddingBottom="0dp"/>
@@ -45,7 +46,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Cook me! is free software under the MIT license. The source code, the license document and the author's contact info can be found at https://github.com/lcneves/cookme"
+                android:text="Cook me! is free software under the MIT license. Please visit https://github.com/lcneves/cookme for the source code, the license document and the author's contact info."
                 android:paddingTop="5dp"
                 android:paddingBottom="10dp"
                 android:id="@+id/aboutPar1" />
@@ -61,21 +62,27 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Maria Savchenko, for the brilliant idea;"
+                android:text="Maria Savchenko, for the brilliant idea and design advice;"
                 android:paddingBottom="3dp"
                 android:id="@+id/aboutPar3" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="The OpenRecipes project by Fictive Kin, for the huge recipes database. Please visit https://github.com/fictivekin/openrecipes to support that awesome project and for license details."
+                android:text="André Neves, Helder Gonzales and Luis Guadagnin, the alpha testers;"
+                android:paddingBottom="3dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="The OpenRecipes project by Fictive Kin, for the huge recipes database. Please visit https://github.com/fictivekin/openrecipes to support that awesome project and for license info;"
                 android:paddingBottom="3dp"
                 android:id="@+id/aboutPar4" />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Turbomilk for the beautiful soup icon. Check out their work at http://turbomilk.com"
+                android:text="Turbomilk for the beautiful soup icon (edited). Visit http://turbomilk.com to check out their work;"
                 android:paddingBottom="3dp"
                 android:id="@+id/aboutPar5" />
             <TextView
@@ -115,7 +122,11 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Close"/>
-                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="20dp">
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 </LinearLayout>
