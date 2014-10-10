@@ -242,11 +242,16 @@ public class JSONHelper extends Activity {
         protected void onPostExecute(String result) {
             mWakeLock.release();
             mProgressDialog.dismiss();
-            if (result != null)
+            if (result != null) {
                 Toast.makeText(context,"Download error: "+result, Toast.LENGTH_LONG).show();
-            else
-                Toast.makeText(context,"File downloaded, unzipping...", Toast.LENGTH_SHORT).show();
-            unzipJSON(fileGz, fileOld);
+                if(fileGz.exists())
+                    fileGz.delete();
+                database.dropRecipes();
+                Intent intent = new Intent(JSONHelper.this, MainActivity.class);
+                startActivity(intent);
+            } else {
+                unzipJSON(fileGz, fileOld);
+            }
         }
     }
 
