@@ -134,9 +134,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public boolean verifyRecipesTable() {
         SQLiteDatabase db = null;
+        Cursor cursor;
         try {
             db=this.getWritableDatabase();
-            Cursor cursor = db.rawQuery("select DISTINCT tbl_name from sqlite_master where tbl_name = '"+recipesTable+"'", null);
+            try {
+                cursor = db.query(recipesTable, new String[] {recID}, null, null, null, null, null, "1");
+            } catch (Exception e) {
+                return false;
+            }
             if(cursor!=null) {
                 if(cursor.getCount()>0) {
                     cursor.close();

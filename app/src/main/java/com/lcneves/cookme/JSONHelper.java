@@ -6,8 +6,10 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.JsonReader;
 import android.util.Log;
 
@@ -61,6 +63,7 @@ public class JSONHelper extends Activity {
     Context context = JSONHelper.this;
     ProgressDialog mProgressDialog;
     DatabaseHelper database = new DatabaseHelper(this);
+    InputStream input = null;
 
 
     @Override
@@ -84,46 +87,31 @@ public class JSONHelper extends Activity {
         fileNew = new File(fileDir, fileNameNew);
         fileGz = new File(fileDir, fileNameGz);
 
-        downloadJSON(JSONUrl);
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(cm.getActiveNetworkInfo() != null) {
+            if(cm.getActiveNetworkInfo().isConnected()) {
+                downloadJSON(JSONUrl);
+            }
+        } else {
+            ConnectivityDialogFragment dialogConnectivity = new ConnectivityDialogFragment();
+            dialogConnectivity.show(getFragmentManager(), "tag");
+        }
     }
-
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.jsonhelper, menu);
-        return true;
-    }*/
-/*
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        *//*
-        if (id == R.id.action_settings) {
-            return true;
-        }*//*
-        return super.onOptionsItemSelected(item);
-    }*/
 
     private void downloadJSON(String url) {
         mProgressDialog = new ProgressDialog(JSONHelper.this);
         mProgressDialog.setMessage("Cleaning old database...");
         mProgressDialog.setIndeterminate(true);
         mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        mProgressDialog.setCancelable(true);
+        mProgressDialog.setCancelable(false);
 
         final DownloadTask downloadTask = new DownloadTask(JSONHelper.this);
-        downloadTask.execute(url);
-
-        mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
+        mProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
                 downloadTask.cancel(true);
             }
         });
+        downloadTask.execute(url);
     }
 
     private void unzipJSON(File fileIn, File fileOut) {
@@ -170,7 +158,6 @@ public class JSONHelper extends Activity {
 
         @Override
         protected String doInBackground(String... sUrl) {
-            InputStream input = null;
             OutputStream output = null;
             HttpURLConnection connection = null;
             database.recreateDatabase();
@@ -184,20 +171,13 @@ public class JSONHelper extends Activity {
                 URL url = new URL(sUrl[0]);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
-
-                // expect HTTP 200 OK, so we don't mistakenly save error report
-                // instead of the file
                 if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
                     return "Server returned HTTP " + connection.getResponseCode()
                             + " " + connection.getResponseMessage();
                 }
-
-                // this will be useful to display download percentage
-                // might be -1: server did not report the length
                 fileLengthInt = connection.getContentLength();
                 fileLength = fileLengthInt;
 
-                // download the file
                 input = connection.getInputStream();
                 output = new FileOutputStream(fileGz);
 
@@ -205,7 +185,6 @@ public class JSONHelper extends Activity {
                 long total = 0;
                 int count;
                 while ((count = input.read(data)) != -1) {
-                    // allow canceling with back button
                     if (isCancelled()) {
                         input.close();
                         if(fileGz.exists())
@@ -216,9 +195,8 @@ public class JSONHelper extends Activity {
                         return null;
                     }
                     total += count;
-                    // publishing the progress....
-                    if (fileLength > 0) // only if total length is known
-                        publishProgress((int) (total));
+                    if (fileLength > 0)
+                        publishProgress((int) (total/1024));
                         output.write(data, 0, count);
                 }
             } catch (Exception e) {
@@ -256,7 +234,7 @@ public class JSONHelper extends Activity {
             // if we get here, length is known, now set indeterminate to false
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMessage("Downloading "+(new DecimalFormat("#.##").format(fileLength/1048576))+" MB...");
-            mProgressDialog.setMax(fileLengthInt);
+            mProgressDialog.setMax(fileLengthInt/1024);
             mProgressDialog.setProgress(progress[0]);
         }
 
@@ -537,6 +515,38 @@ public class JSONHelper extends Activity {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             builder.setMessage("This device does not have enough free space to import the database. Please free at least 300 MB and try again.")
                     .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                            startActivity(intent);
+                        }
+                    });
+            return builder.create();
+        }
+    }
+
+    public static class ConnectivityDialogFragment extends DialogFragment {
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("Please ensure that this device is connected to the internet.")
+                    .setPositiveButton("Try again", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            new Handler().post(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    Intent intent = getActivity().getIntent();
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                                    getActivity().overridePendingTransition(0, 0);
+                                    getActivity().finish();
+
+                                    getActivity().overridePendingTransition(0, 0);
+                                    startActivity(intent);
+                                }
+                            });
+                        }
+                    })
+                    .setNegativeButton("Later", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             Intent intent = new Intent(getActivity(), MainActivity.class);
                             startActivity(intent);
