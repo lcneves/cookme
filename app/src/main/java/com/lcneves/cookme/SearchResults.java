@@ -135,8 +135,10 @@ public class SearchResults extends Activity {
                 int urlIndex = cursor.getColumnIndexOrThrow(recURL);
                 long startTime = System.nanoTime();
                 int selLength;
+                int selMaxMismatches = 0;
                 if (selIngredients != null) {
                     selLength = selIngredients.length;
+                    selMaxMismatches = (selLength / 2);
                 } else {
                     selLength = 0;
                 }
@@ -149,7 +151,7 @@ public class SearchResults extends Activity {
                 String comma = ", ";
                 String matches = null;
                 String mismatches = null;
-                for (int i = 0; i < rowCount; i++) {
+                parse: for (int i = 0; i < rowCount; i++) {
                     if(i % 1000 == 0)
                         publishProgress((int) (i));
                     name = cursor.getString(nameIndex);
@@ -171,6 +173,10 @@ public class SearchResults extends Activity {
                             matchesBuilder.append(selIngredients[j]);
 
                         } else {
+                            if(misCount == selMaxMismatches) {
+                                cursor.moveToNext();
+                                continue parse;
+                            }
                             if(misMatchesBuilder.length() > 13)
                                 misMatchesBuilder.append(", ");
                             misMatchesBuilder.append(selIngredients[j]);
@@ -208,7 +214,7 @@ public class SearchResults extends Activity {
         protected void onProgressUpdate(Integer... progress) {
             super.onProgressUpdate(progress);
             // if we get here, length is known, now set indeterminate to false
-            mProgressDialog.setMessage("Found "+rowCount+" recipes matching some of your ingredients. Processing...");
+            mProgressDialog.setMessage("Processing "+rowCount+" recipes... "+(progress[0] * 100 / rowCount)+"%");
             mProgressDialog.setIndeterminate(false);
             mProgressDialog.setMax(rowCount);
             mProgressDialog.setProgress(progress[0]);
@@ -236,9 +242,16 @@ public class SearchResults extends Activity {
                 Intent intent = new Intent(SearchResults.this, MainActivity.class);
                 startActivity(intent);
             } else {
-                Intent intent = new Intent(SearchResults.this, DisplayResults.class);
-                intent.putExtra("com.lcneves.cookme.ROW", cursorCount);
-                startActivity(intent);
+                if(list.size() == 0) {
+                    Toast toast = Toast.makeText(SearchResults.this, "No recipes use more than half of the ingredients!", Toast.LENGTH_LONG);
+                    toast.show();
+                    Intent intent = new Intent(SearchResults.this, MainActivity.class);
+                    startActivity(intent);
+                } else {
+                    Intent intent = new Intent(SearchResults.this, DisplayResults.class);
+                    intent.putExtra("com.lcneves.cookme.ROW", cursorCount);
+                    startActivity(intent);
+                }
             }
         }
     }

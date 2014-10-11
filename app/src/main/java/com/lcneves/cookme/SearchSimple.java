@@ -151,17 +151,26 @@ public class SearchSimple extends ListActivity {
                 }
             } else {
                 if(selIngredients != null) {
-                    if(selIngredients.length > 1) {
+                    if(selIngredients.length > 2) {
                         SearchMoreDialogFragment searchMoreDialog = new SearchMoreDialogFragment();
                         searchMoreDialog.show(getFragmentManager(), "tag");
                     } else {
+                        Toast toast;
                         if (recipeName != null) {
-                            Toast toast = Toast.makeText(SearchSimple.this, "No recipes for \""+recipeName+"\" found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
+                            if(selIngredients.length == 1) {
+                                toast = Toast.makeText(SearchSimple.this, "No recipes for \""+recipeName+"\" found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
+                            } else {
+                                toast = Toast.makeText(SearchSimple.this, "No recipes for \""+recipeName+"\" found using \""+selIngredients[0]+"\" and \""+selIngredients[1]+"\"", Toast.LENGTH_LONG);
+                            }
                             toast.show();
                             Intent intent = new Intent(SearchSimple.this, MainActivity.class);
                             startActivity(intent);
                         } else {
-                            Toast toast = Toast.makeText(SearchSimple.this, "No recipes found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
+                            if(selIngredients.length == 1) {
+                                toast = Toast.makeText(SearchSimple.this, "No recipes found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
+                            } else {
+                                toast = Toast.makeText(SearchSimple.this, "No recipes found using \""+selIngredients[0]+"\" and \""+selIngredients[1]+"\"", Toast.LENGTH_LONG);
+                            }
                             toast.show();
                             Intent intent = new Intent(SearchSimple.this, MainActivity.class);
                             startActivity(intent);

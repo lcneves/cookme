@@ -14,12 +14,14 @@ import android.os.Bundle;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -139,6 +141,31 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         // we don't look for swipes.
         lv2.setOnScrollListener(touchListener2.makeScrollListener());
 
+        EditText ingredientsEditText = (EditText) findViewById(R.id.editText);
+        EditText shoppingEditText = (EditText) findViewById(R.id.editText2);
+        ingredientsEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    OnAddingIngredients(v);
+                    return true;
+                }
+                return false;
+            }
+        });
+        shoppingEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    OnAddingShopping(v);
+                    return true;
+                }
+                return false;
+            }
+        });
+
         if(!db.verifyRecipesTable() && !databaseCheck) {
             DownloadParseDialogFragment dialogDownloadParse = new DownloadParseDialogFragment();
             dialogDownloadParse.show(getFragmentManager(), "tag");
@@ -155,6 +182,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         static List<String> checkedList;
         boolean checkAllIngredients = false;
         boolean checkAllShopping = false;
+        DatabaseHelper dbSearch;
+        Cursor cursorSearch;
+        Cursor cursorSearch2;
+        MyCursorAdapter adapterSearch;
+        MyCursorAdapter adapterSearch2;
 
         public static void checkBoxClick(View v) {
             CheckBox checkBox = (CheckBox) v;
@@ -188,18 +220,19 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
+            super.onCreateView(inflater, container, savedInstanceState);
             View v = inflater.inflate(R.layout.search_dialog, container, false);
-            DatabaseHelper dbSearch = new DatabaseHelper(context);
+            dbSearch = new DatabaseHelper(context);
             final ListView lvSearch = (ListView) v.findViewById(R.id.listview_fridge);
             final InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
             final EditText input = (EditText) v.findViewById(R.id.editTextSearch);
             input.clearFocus();
-            Cursor cursorSearch = dbSearch.displayIngredients();
-            MyCursorAdapter adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
+            cursorSearch = dbSearch.displayIngredients();
+            adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch.setAdapter(adapterSearch);
             final ListView lvSearch2 = (ListView) v.findViewById(R.id.listview_shopping);
-            Cursor cursorSearch2 = dbSearch.displayShopping();
-            MyCursorAdapter adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
+            cursorSearch2 = dbSearch.displayShopping();
+            adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch2.setAdapter(adapterSearch2);
             Button buttonSearch = (Button)v.findViewById(R.id.search_button);
             buttonSearch.setOnClickListener(new View.OnClickListener() {
@@ -241,25 +274,24 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             ImageView selectIngredients = (ImageView)v.findViewById(R.id.select_all_ingredients);
             selectIngredients.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    View view;
-                    CheckBox checkBox;
+                    String row_item;
+                    int columnIndex = cursorSearch.getColumnIndex(DatabaseHelper.ingName);
                     for (int i = 0; i < lvSearch.getCount(); i++) {
-                        view = lvSearch.getChildAt(i);
-                        checkBox = (CheckBox) view.findViewById(R.id.checkBox);
-                        TextView item=(TextView) view.findViewById(R.id.grocery);
-                        String row_item=item.getText().toString();
+                        cursorSearch.moveToPosition(i);
+                        row_item = cursorSearch.getString(columnIndex);
                         if(!checkAllIngredients) {
-                            checkBox.setChecked(true);
                             if(!checkedList.contains(row_item)) {
                                 checkedList.add(row_item);
                             }
                         } else {
-                            checkBox.setChecked(false);
                             if(checkedList.contains(row_item)) {
                                 checkedList.remove(row_item);
                             }
                         }
                     }
+                    adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
+                    adapterSearch.notifyDataSetChanged();
+                    lvSearch.setAdapter(adapterSearch);
                     checkAllIngredients = !checkAllIngredients;
                 }
             });
@@ -272,29 +304,36 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             ImageView selectShopping = (ImageView)v.findViewById(R.id.select_all_shopping);
             selectShopping.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    View view;
-                    CheckBox checkBox;
+                    String row_item;
+                    int columnIndex = cursorSearch2.getColumnIndex(DatabaseHelper.shoName);
                     for (int i = 0; i < lvSearch2.getCount(); i++) {
-                        view = lvSearch2.getChildAt(i);
-                        checkBox = (CheckBox) view.findViewById(R.id.checkBox);
-                        TextView item=(TextView) view.findViewById(R.id.grocery);
-                        String row_item=item.getText().toString();
+                        cursorSearch2.moveToPosition(i);
+                        row_item = cursorSearch2.getString(columnIndex);
                         if(!checkAllShopping) {
-                            checkBox.setChecked(true);
                             if(!checkedList.contains(row_item)) {
                                 checkedList.add(row_item);
                             }
                         } else {
-                            checkBox.setChecked(false);
                             if(checkedList.contains(row_item)) {
                                 checkedList.remove(row_item);
                             }
                         }
                     }
+                    adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
+                    adapterSearch2.notifyDataSetChanged();
+                    lvSearch2.setAdapter(adapterSearch2);
                     checkAllShopping = !checkAllShopping;
                 }
             });
             return v;
+        }
+
+        @Override
+        public void onDestroyView () {
+            super.onDestroyView();
+            cursorSearch.close();
+            cursorSearch2.close();
+            dbSearch.close();
         }
     }
 
@@ -589,6 +628,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             anim.setDuration(500);
             anim.start();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_HOME);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
     }
 
     @Override

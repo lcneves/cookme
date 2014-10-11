@@ -37,7 +37,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.os.PowerManager;
 import android.widget.Toast;
 
@@ -65,17 +64,24 @@ public class JSONHelper extends Activity {
     DatabaseHelper database = new DatabaseHelper(this);
     InputStream input = null;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_jsonhelper);
+        final int MIN_FREE_SPACE = 314572800; // During tests, this class used up to 250+ MB.
         if(Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-            if(context.getExternalFilesDir(null).getFreeSpace() > 314572800) {
+            if(context.getExternalFilesDir(null).getFreeSpace() > MIN_FREE_SPACE) {
                 fileDir = context.getExternalFilesDir(null);
+            } else {
+                if(context.getFilesDir().getFreeSpace() > MIN_FREE_SPACE) {
+                    fileDir = context.getFilesDir();
+                } else {
+                    FreeSpaceDialogFragment dialogFreeSpace = new FreeSpaceDialogFragment();
+                    dialogFreeSpace.show(getFragmentManager(), "tag");
+                }
             }
         } else {
-            if(context.getFilesDir().getFreeSpace() > 314572800) {
+            if(context.getFilesDir().getFreeSpace() > MIN_FREE_SPACE) {
                 fileDir = context.getFilesDir();
             } else {
                 FreeSpaceDialogFragment dialogFreeSpace = new FreeSpaceDialogFragment();
