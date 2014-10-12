@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -61,6 +63,12 @@ public class DisplayResults extends ListActivity {
                 getListView().setSelection(cursorCount);
             }
         });
+        if(SearchResults.selIngredients != null) {
+            if((SearchResults.selIngredients.length - SearchResults.selMaxMismatches) > 1) {
+                View footerView = ((LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
+                lv.addFooterView(footerView);
+            }
+        }
     }
 
     @Override
@@ -138,6 +146,15 @@ public class DisplayResults extends ListActivity {
     public void clickAboutMenuDisplay(MenuItem menu) {
         MainActivity.AboutDialogFragment aboutDialog = new MainActivity.AboutDialogFragment();
         aboutDialog.show(getFragmentManager(), "tag");
+    }
+
+    public void clickShowMore(View v) {
+        Intent intent = new Intent(DisplayResults.this, SearchResults.class);
+        intent.putExtra("com.lcneves.cookme.RECIPENAME", SearchResults.recipeName);
+        intent.putExtra("com.lcneves.cookme.INGREDIENTS", SearchResults.selIngredients);
+        intent.putExtra("com.lcneves.cookme.ROW", SearchResults.list.size());
+        intent.putExtra("com.lcneves.cookme.MAX_MISMATCHES", (SearchResults.selMaxMismatches + 1));
+        startActivity(intent);
     }
 
     @Override

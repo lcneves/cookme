@@ -1,9 +1,7 @@
 package com.lcneves.cookme;
 
 import android.app.Activity;
-import android.app.ListActivity;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -11,31 +9,21 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.util.JsonReader;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 
 
 public class SearchResults extends Activity {
 
     ProgressDialog mProgressDialog;
-    String[] selIngredients;
-    String recipeName;
+    static String[] selIngredients;
+    static String recipeName;
     String selIngredientsDummy = null;
     int cursorCount;
     static final String recipesTable="Recipes";
@@ -46,6 +34,7 @@ public class SearchResults extends Activity {
     static final String resMismatches="Mismatches";
     static final String resMismatchCount="MismatchCount";
     int rowCount = 0;
+    static int selMaxMismatches;
     static ArrayList<HashMap<String, String>> list;
 
     @Override
@@ -56,6 +45,7 @@ public class SearchResults extends Activity {
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
         cursorCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
+        selMaxMismatches = intent.getIntExtra("com.lcneves.cookme.MAX_MISMATCHES", 0);
         list = null;
         Log.d("com.lcneves.cookme.SearchResults", "selIngredients= "+selIngredients+", recipeName= "+recipeName);
 
@@ -134,28 +124,41 @@ public class SearchResults extends Activity {
                 int ingredientsIndex = cursor.getColumnIndexOrThrow(recIngredients);
                 int urlIndex = cursor.getColumnIndexOrThrow(recURL);
                 long startTime = System.nanoTime();
+                boolean firstSearch = false;
                 int selLength;
-                int selMaxMismatches = 0;
                 if (selIngredients != null) {
                     selLength = selIngredients.length;
-                    selMaxMismatches = (selLength / 2);
+                    if(selMaxMismatches == 0) {
+                        selMaxMismatches = selLength;
+                        firstSearch = true;
+                    }
                 } else {
                     selLength = 0;
                 }
                 HashMap<String, String> map;
                 String name;
                 String ingredients;
+                String ingredientsLower;
                 String url;
                 StringBuilder matchesBuilder = null;
                 StringBuilder misMatchesBuilder = null;
-                String comma = ", ";
+                final String comma = ", ";
                 String matches = null;
                 String mismatches = null;
+
+                String[] selIngredientsLower = new String[selIngredients.length];
+                for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
+
+                long oldTime = System.nanoTime();
+
                 parse: for (int i = 0; i < rowCount; i++) {
-                    if(i % 1000 == 0)
+                    if(System.nanoTime() - oldTime > 1e9) { // update every second
+                        oldTime = System.nanoTime();
                         publishProgress((int) (i));
+                    }
                     name = cursor.getString(nameIndex);
                     ingredients = cursor.getString(ingredientsIndex);
+                    ingredientsLower = ingredients.toLowerCase(Locale.ENGLISH);
                     url = cursor.getString(urlIndex);
                     if (selIngredients != null) {
                         matchesBuilder = new StringBuilder("Uses: ");
@@ -167,21 +170,26 @@ public class SearchResults extends Activity {
                     int misCount = 0;
                     map = new HashMap<String, String>(7, 1);
                     for (int j = 0; j < selLength; j++) {
-                        if (ingredients.toLowerCase(Locale.ENGLISH).contains(selIngredients[j].toLowerCase(Locale.ENGLISH))) {
-                            if(matchesBuilder.length() > 6)
-                                matchesBuilder.append(", ");
+                        if (ingredientsLower.contains(selIngredientsLower[j])) {
+                            if(matchesBuilder.length() > 6) {
+                                matchesBuilder.append(comma);
+                            }
                             matchesBuilder.append(selIngredients[j]);
-
                         } else {
-                            if(misCount == selMaxMismatches) {
+                            ++misCount;
+                            if(misCount > selMaxMismatches) {
                                 cursor.moveToNext();
                                 continue parse;
                             }
-                            if(misMatchesBuilder.length() > 13)
-                                misMatchesBuilder.append(", ");
+                            if(misMatchesBuilder.length() > 13) {
+                                misMatchesBuilder.append(comma);
+                            }
                             misMatchesBuilder.append(selIngredients[j]);
-                            misCount++;
                         }
+                    }
+                    if (firstSearch && misCount < selMaxMismatches) {
+                        selMaxMismatches = misCount;
+                        list.clear();
                     }
                     if(misCount == 0 && selIngredients != null)
                         misMatchesBuilder.setLength(0);

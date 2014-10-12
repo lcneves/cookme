@@ -283,6 +283,7 @@ public class SearchSimple extends ListActivity {
         intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
         intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
         intent.putExtra("com.lcneves.cookme.ROW", cursorCount);
+        intent.putExtra("com.lcneves.cookme.MAX_MISMATCHES", 1);
         startActivity(intent);
     }
 
