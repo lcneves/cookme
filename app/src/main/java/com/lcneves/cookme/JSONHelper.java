@@ -42,14 +42,13 @@ import android.widget.Toast;
 
 public class JSONHelper extends Activity {
 
-    private static final String NAME = "name";
-    private static final String INGREDIENTS = "ingredients";
-    private static final String URL = "url";
-    static final String recName="Name";
-    static final String recIngredients="Ingredients";
-    static final String recURL="URL";
-    static final String recLength="Length";
-    static final String recipesTable="Recipes";
+    final String recID = DatabaseHelper.recID;
+    final String recName = DatabaseHelper.recName;
+    final String recIngredients = DatabaseHelper.recIngredients;
+    final String recIngredientsLower = DatabaseHelper.recIngredientsLower;
+    final String recURL = DatabaseHelper.recURL;
+    final String recLength = DatabaseHelper.recLength;
+    final String recipesTable = DatabaseHelper.recipesTable;
     static final String fileNameOld = "recipeitems-latest.json";
     static final String fileNameNew = "recipeitems-edited.json";
     static final String fileNameGz = "recipeitems-latest.json.gz";
@@ -433,7 +432,11 @@ public class JSONHelper extends Activity {
             String jsonName;
             String jsonIngredients;
             String jsonUrl;
+            final String NAME = "name";
+            final String INGREDIENTS = "ingredients";
+            final String URL = "url";
             int lineProgress = 0;
+            long oldTime = System.nanoTime();
             try {
                 jsonReader = new JsonReader(new BufferedReader(new FileReader(fileNew)));
                 jsonReader.beginArray();
@@ -455,12 +458,15 @@ public class JSONHelper extends Activity {
                         }
                     }
                     lineProgress++;
-                    if(lineProgress % 1000 == 0)
+                    if(System.nanoTime() - oldTime > 1e9) { // update every second
+                        oldTime = System.nanoTime();
                         publishProgress((int) (lineProgress));
+                    }
                     jsonReader.endObject();
                     ContentValues cv=new ContentValues();
                     cv.put(recName, jsonName);
                     cv.put(recIngredients, jsonIngredients);
+                    cv.put(recIngredientsLower, jsonIngredients.toLowerCase());
                     cv.put(recURL, jsonUrl);
                     cv.put(recLength, jsonIngredients.length());
                     db.insertOrThrow(recipesTable, null, cv);

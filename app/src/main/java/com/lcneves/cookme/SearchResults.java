@@ -26,13 +26,10 @@ public class SearchResults extends Activity {
     static String recipeName;
     String selIngredientsDummy = null;
     int cursorCount;
-    static final String recipesTable="Recipes";
-    static final String recName="Name";
-    static final String recIngredients="Ingredients";
-    static final String recURL="URL";
-    static final String resMatches="Matches";
-    static final String resMismatches="Mismatches";
-    static final String resMismatchCount="MismatchCount";
+
+    String resMatches;
+    String resMismatches;
+    String resMismatchCount;
     int rowCount = 0;
     static int selMaxMismatches;
     static ArrayList<HashMap<String, String>> list;
@@ -100,29 +97,29 @@ public class SearchResults extends Activity {
             String whereCondition = "";
 
             if (recipeName != null) {
-                whereCondition = recName+" LIKE \'%" + recipeName + "%\'";
+                whereCondition = DatabaseHelper.recName+" LIKE \'%" + recipeName + "%\'";
                 if (selIngredients != null) {
                     whereCondition = whereCondition + " AND ";
                 }
             }
             if (selIngredients != null) {
-                whereCondition = whereCondition + recIngredients+" LIKE \'%" + selIngredients[0] + "%\'";
+                whereCondition = whereCondition + DatabaseHelper.recIngredients+" LIKE \'%" + selIngredients[0] + "%\'";
                 for (int i = 1; i < selIngredients.length; i++) {
-                    whereCondition = whereCondition + " OR " + recIngredients + " LIKE \'%" + selIngredients[i] + "%\'";
+                    whereCondition = whereCondition + " OR " + DatabaseHelper.recIngredients + " LIKE \'%" + selIngredients[i] + "%\'";
                     if (recipeName != null) {
-                        whereCondition = whereCondition +" AND "+recName+" LIKE \'%" + recipeName + "%\'";
+                        whereCondition = whereCondition +" AND "+DatabaseHelper.recName+" LIKE \'%" + recipeName + "%\'";
                     }
                 }
             }
             Log.d("com.lcneves.cookme.SearchResults", "whereCondition is: "+whereCondition);
-            Cursor cursor = db.query(recipesTable, new String[] {recName, recIngredients, recURL}, whereCondition, null, null, null, null);
+            Cursor cursor = db.query(DatabaseHelper.recipesTable, new String[] {DatabaseHelper.recID, DatabaseHelper.recIngredientsLower}, whereCondition, null, null, null, null);
             if(cursor.moveToFirst()) {
                 rowCount = cursor.getCount();
                 progressMessage = "Found "+rowCount+" recipes matching your ingredients. Processing...";
                 list = new ArrayList<HashMap<String, String>>(rowCount);
-                int nameIndex = cursor.getColumnIndexOrThrow(recName);
-                int ingredientsIndex = cursor.getColumnIndexOrThrow(recIngredients);
-                int urlIndex = cursor.getColumnIndexOrThrow(recURL);
+                int nameIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recName);
+                int ingredientsIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredients);
+                int urlIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recURL);
                 long startTime = System.nanoTime();
                 boolean firstSearch = false;
                 int selLength;
