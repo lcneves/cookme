@@ -67,12 +67,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db=this.getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS "+sortTable);
         db.execSQL("DROP VIEW IF EXISTS "+resultsView);
-        db.execSQL("CREATE TABLE "+sortTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+sortID+" INTEGER, "+sortOrder+" INTEGER)");
+        db.execSQL("CREATE TABLE "+sortTable+" ("+sortOrder+" INTEGER PRIMARY KEY, "+sortID+" INTEGER)");
         db.beginTransaction();
         for(int i = 0; i < sortedIDs.length; i++) {
             ContentValues cv=new ContentValues();
-            cv.put(sortID, sortedIDs[i]);
             cv.put(sortOrder, i);
+            cv.put(sortID, sortedIDs[i]);
             db.insertOrThrow(sortTable, null, cv);
         }
         db.setTransactionSuccessful();
