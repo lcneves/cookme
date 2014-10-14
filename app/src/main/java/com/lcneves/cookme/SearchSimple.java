@@ -105,7 +105,7 @@ public class SearchSimple extends ListActivity {
             Log.d("com.lcneves.cookme.SearchSimple", "whereCondition is: " + whereCondition);
             if (selIngredients != null) {
                 if(selIngredients.length > 1) {
-                    cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL, recLength}, whereCondition, null, null, null, recLength);
+                    cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
                 } else {
                     cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
                 }

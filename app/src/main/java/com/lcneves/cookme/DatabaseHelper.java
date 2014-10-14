@@ -23,6 +23,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     static final String recURL="URL";
     static final String recLength="Length";
 
+    static final String resMismatches="Mismatches";
+
     static final String ingredientsTable="IngredientsTable";
     static final String ingID="_id";
     static final String ingName="IngName";
@@ -52,7 +54,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void recreateDatabase() {
         SQLiteDatabase db=this.getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS "+recipesTable);
-        db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recIngredientsLower+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER)");
+        db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recIngredientsLower+" TEXT, "+recURL+" TEXT)");
         db.close();
     }
 

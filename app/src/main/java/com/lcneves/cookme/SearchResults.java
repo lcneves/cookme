@@ -25,14 +25,10 @@ public class SearchResults extends Activity {
     static String[] selIngredients;
     static String recipeName;
     String selIngredientsDummy = null;
-    int cursorCount;
-
-    String resMatches;
-    String resMismatches;
-    String resMismatchCount;
     int rowCount = 0;
-    static int selMaxMismatches;
     static ArrayList<HashMap<String, String>> list;
+    final String resMismatches = DatabaseHelper.resMismatches;
+    final String recSize = "size";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +37,6 @@ public class SearchResults extends Activity {
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
-        cursorCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
-        selMaxMismatches = intent.getIntExtra("com.lcneves.cookme.MAX_MISMATCHES", 0);
         list = null;
         Log.d("com.lcneves.cookme.SearchResults", "selIngredients= "+selIngredients+", recipeName= "+recipeName);
 
@@ -114,34 +108,23 @@ public class SearchResults extends Activity {
             Log.d("com.lcneves.cookme.SearchResults", "whereCondition is: "+whereCondition);
             Cursor cursor = db.query(DatabaseHelper.recipesTable, new String[] {DatabaseHelper.recID, DatabaseHelper.recIngredientsLower}, whereCondition, null, null, null, null);
             if(cursor.moveToFirst()) {
+                final String recID = DatabaseHelper.recID;
+
                 rowCount = cursor.getCount();
                 progressMessage = "Found "+rowCount+" recipes matching your ingredients. Processing...";
                 list = new ArrayList<HashMap<String, String>>(rowCount);
-                int nameIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recName);
-                int ingredientsIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredients);
-                int urlIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recURL);
+                int IDIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recID);
+                int ingredientsLowerIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredientsLower);
                 long startTime = System.nanoTime();
-                boolean firstSearch = false;
                 int selLength;
                 if (selIngredients != null) {
                     selLength = selIngredients.length;
-                    if(selMaxMismatches == 0) {
-                        selMaxMismatches = selLength;
-                        firstSearch = true;
-                    }
                 } else {
                     selLength = 0;
                 }
                 HashMap<String, String> map;
-                String name;
-                String ingredients;
+                String id;
                 String ingredientsLower;
-                String url;
-                StringBuilder matchesBuilder = null;
-                StringBuilder misMatchesBuilder = null;
-                final String comma = ", ";
-                String matches = null;
-                String mismatches = null;
 
                 String[] selIngredientsLower = new String[selIngredients.length];
                 for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
@@ -153,54 +136,16 @@ public class SearchResults extends Activity {
                         oldTime = System.nanoTime();
                         publishProgress((int) (i));
                     }
-                    name = cursor.getString(nameIndex);
-                    ingredients = cursor.getString(ingredientsIndex);
-                    ingredientsLower = ingredients.toLowerCase(Locale.ENGLISH);
-                    url = cursor.getString(urlIndex);
-                    if (selIngredients != null) {
-                        matchesBuilder = new StringBuilder("Uses: ");
-                        misMatchesBuilder = new StringBuilder("Doesn't use: ");
-                    } else {
-                        matches = "";
-                        mismatches = "";
-                    }
+                    id = cursor.getString(IDIndex);
+                    ingredientsLower = cursor.getString(ingredientsLowerIndex);
                     int misCount = 0;
-                    map = new HashMap<String, String>(7, 1);
+                    map = new HashMap<String, String>(3, 1);
                     for (int j = 0; j < selLength; j++) {
-                        if (ingredientsLower.contains(selIngredientsLower[j])) {
-                            if(matchesBuilder.length() > 6) {
-                                matchesBuilder.append(comma);
-                            }
-                            matchesBuilder.append(selIngredients[j]);
-                        } else {
-                            ++misCount;
-                            if(misCount > selMaxMismatches) {
-                                cursor.moveToNext();
-                                continue parse;
-                            }
-                            if(misMatchesBuilder.length() > 13) {
-                                misMatchesBuilder.append(comma);
-                            }
-                            misMatchesBuilder.append(selIngredients[j]);
-                        }
+                        if (!ingredientsLower.contains(selIngredientsLower[j])) ++misCount;
                     }
-                    if (firstSearch && misCount < selMaxMismatches) {
-                        selMaxMismatches = misCount;
-                        list.clear();
-                    }
-                    if(misCount == 0 && selIngredients != null)
-                        misMatchesBuilder.setLength(0);
-                    if (selIngredients != null) {
-                        matches = matchesBuilder.toString();
-                        mismatches = misMatchesBuilder.toString();
-                    }
-                    map.put("_id", Integer.toString(i));
-                    map.put(recName, name);
-                    map.put(recIngredients, ingredients);
-                    map.put(recURL, url);
-                    map.put(resMatches, matches);
-                    map.put(resMismatches, mismatches);
-                    map.put(resMismatchCount, Integer.toString(misCount));
+                    map.put(recID, id);
+                    map.put(resMismatches, Integer.toString(misCount));
+                    map.put(recSize, Integer.toString(ingredientsLower.length()));
                     list.add(map);
                     cursor.moveToNext();
                 }
@@ -247,16 +192,9 @@ public class SearchResults extends Activity {
                 Intent intent = new Intent(SearchResults.this, MainActivity.class);
                 startActivity(intent);
             } else {
-                if(list.size() == 0) {
-                    Toast toast = Toast.makeText(SearchResults.this, "No recipes use more than half of the ingredients!", Toast.LENGTH_LONG);
-                    toast.show();
-                    Intent intent = new Intent(SearchResults.this, MainActivity.class);
-                    startActivity(intent);
-                } else {
-                    Intent intent = new Intent(SearchResults.this, DisplayResults.class);
-                    intent.putExtra("com.lcneves.cookme.ROW", cursorCount);
-                    startActivity(intent);
-                }
+                Intent intent = new Intent(SearchResults.this, DisplayResults.class);
+                intent.putExtra("com.lcneves.cookme.ROW", rowCount);
+                startActivity(intent);
             }
         }
     }
@@ -264,13 +202,13 @@ public class SearchResults extends Activity {
     public class MiscountComparator implements Comparator<HashMap<String, String>> {
         @Override
         public int compare(HashMap<String, String> map1, HashMap<String, String> map2) {
-            return Double.compare(Integer.parseInt(map1.get(resMismatchCount)), Integer.parseInt(map2.get(resMismatchCount)));
+            return Double.compare(Integer.parseInt(map1.get(resMismatches)), Integer.parseInt(map2.get(resMismatches)));
         }
     }
     public class LengthComparator implements Comparator<HashMap<String, String>> {
         @Override
         public int compare(HashMap<String, String> map1, HashMap<String, String> map2) {
-            return Double.compare(map1.get(recIngredients).length(), map2.get(recIngredients).length());
+            return Double.compare(Integer.parseInt(map1.get(recSize)), Integer.parseInt(map2.get(recSize)));
         }
     }
 }

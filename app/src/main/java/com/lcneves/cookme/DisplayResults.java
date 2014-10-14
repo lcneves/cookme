@@ -1,31 +1,21 @@
 package com.lcneves.cookme;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -35,40 +25,40 @@ public class DisplayResults extends ListActivity {
     ListView lv;
     static final String resMatches="Matches";
     static final String resMismatches="Mismatches";
-    int cursorCount;
+    int rowCount;
+    final String resultsView = "resultsView";
+    final String recID = DatabaseHelper.recID;
+    DatabaseHelper databaseHelper = new DatabaseHelper(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_results);
         Intent intent = getIntent();
-        cursorCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
-
-        SimpleAdapter adapter = new SimpleAdapter(
+        rowCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
+        SQLiteDatabase database = databaseHelper.getWritableDatabase();
+        String[] IDs = new String[rowCount];
+        for(int i = 0; i < rowCount; i++) {
+            IDs[i] = SearchResults.list.get(i).get(recID);
+        }
+        database.execSQL("DROP VIEW IF EXISTS "+resultsView);
+        database.execSQL("CREATE VIEW "+resultsView+" AS SELECT "+DatabaseHelper.recID+","+DatabaseHelper.recName+","+DatabaseHelper.recIngredients+","+DatabaseHelper.recURL+" FROM "+DatabaseHelper.recipesTable+" WHERE "+DatabaseHelper.recID+" IN "+makePlaceholders(rowCount), IDs);
+        Cursor cursor = database.query(resultsView,
+                new String[] {DatabaseHelper.recID,DatabaseHelper.recName,DatabaseHelper.recIngredients,DatabaseHelper.recURL},
+                null, null, null, null, null);
+        ComplexCursorAdapter adapter = new ComplexCursorAdapter(
                 activity,
-                SearchResults.list,
-                R.layout.list_item,
+                R.layout.list_item_simple,
+                cursor,
                 new String[] {DatabaseHelper.recName, DatabaseHelper.recIngredients,
-                        DatabaseHelper.recURL, resMatches,
-                        resMismatches },
-                new int[] { R.id.name, R.id.ingredients, R.id.url, R.id.matches, R.id.mismatches }
+                        DatabaseHelper.recURL},
+                new int[] { R.id.name, R.id.ingredients, R.id.url},
+                0
         );
         setListAdapter(adapter);
         lv = getListView();
         registerForContextMenu(lv);
-        Log.d("com.lcneves.cookme.DisplayResults", "cursorCount = "+cursorCount);
-        getListView().post(new Runnable() {
-            @Override
-            public void run() {
-                getListView().setSelection(cursorCount);
-            }
-        });
-        if(SearchResults.selIngredients != null) {
-            if((SearchResults.selIngredients.length - SearchResults.selMaxMismatches) > 1) {
-                View footerView = ((LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
-                lv.addFooterView(footerView);
-            }
-        }
+        Log.d("com.lcneves.cookme.DisplayResults", "rowCount = "+ rowCount);
     }
 
     @Override
@@ -89,9 +79,9 @@ public class DisplayResults extends ListActivity {
         int menuItemIndex = item.getItemId();
         String[] recipe = new String[3];
         HashMap<String, String> map = SearchResults.list.get(info.position);
-        recipe[0]=map.get(SearchResults.recName);
-        recipe[1]=map.get(SearchResults.recIngredients);
-        recipe[2]=map.get(SearchResults.recURL);
+        recipe[0]=map.get(DatabaseHelper.recName);
+        recipe[1]=map.get(DatabaseHelper.recIngredients);
+        recipe[2]=map.get(DatabaseHelper.recURL);
         switch (menuItemIndex) {
             case 0:
                 Intent intent = new Intent(this, RecipeViewer.class);
@@ -148,23 +138,14 @@ public class DisplayResults extends ListActivity {
         aboutDialog.show(getFragmentManager(), "tag");
     }
 
-    public void clickShowMore(View v) {
-        Intent intent = new Intent(DisplayResults.this, SearchResults.class);
-        intent.putExtra("com.lcneves.cookme.RECIPENAME", SearchResults.recipeName);
-        intent.putExtra("com.lcneves.cookme.INGREDIENTS", SearchResults.selIngredients);
-        intent.putExtra("com.lcneves.cookme.ROW", SearchResults.list.size());
-        intent.putExtra("com.lcneves.cookme.MAX_MISMATCHES", (SearchResults.selMaxMismatches + 1));
-        startActivity(intent);
-    }
-
     @Override
     protected void onListItemClick(ListView l, View v, int pos, long id) {
         super.onListItemClick(l, v, pos, id);
         String[] recipe = new String[3];
         HashMap<String, String> map = SearchResults.list.get(pos);
-        recipe[0]=map.get(SearchResults.recName);
-        recipe[1]=map.get(SearchResults.recIngredients);
-        recipe[2]=map.get(SearchResults.recURL);
+        recipe[0]=map.get(DatabaseHelper.recName);
+        recipe[1]=map.get(DatabaseHelper.recIngredients);
+        recipe[2]=map.get(DatabaseHelper.recURL);
         Log.d("com.lcneves.cookme.DisplayResults", "Clicked! Recipe name is "+recipe[0]);
         Intent intent = new Intent(this, RecipeViewer.class);
         intent.putExtra("com.lcneves.cookme.RECIPE", recipe);
@@ -181,5 +162,42 @@ public class DisplayResults extends ListActivity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    String makePlaceholders(int len) {
+        if (len < 1) {
+            // It will lead to an invalid query anyway ..
+            throw new RuntimeException("No placeholders");
+        } else {
+            StringBuilder sb = new StringBuilder(len * 2 - 1);
+            sb.append("?");
+            for (int i = 1; i < len; i++) {
+                sb.append(",?");
+            }
+            return sb.toString();
+        }
+    }
+
+    private static class ComplexCursorAdapter extends SimpleCursorAdapter {
+
+        public ComplexCursorAdapter(Context context, int layout, Cursor c,
+                               String[] from, int[] to, int flags) {
+            super(context, layout, c, from, to, flags);
+        }
+
+       /* @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            View view = super.getView(position, convertView, parent);
+            CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBox);
+            TextView item = (TextView) view.findViewById(R.id.grocery);
+            String row_item = item.getText().toString();
+            if (SearchDialogFragment.checkedList.contains(row_item)) {
+                checkBox.setChecked(true);
+            } else {
+                checkBox.setChecked(false);
+            }
+            return view;
+        }*/
     }
 }
