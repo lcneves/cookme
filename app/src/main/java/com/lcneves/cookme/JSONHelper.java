@@ -468,6 +468,7 @@ public class JSONHelper extends Activity {
                     cv.put(recIngredients, jsonIngredients);
                     cv.put(recIngredientsLower, jsonIngredients.toLowerCase());
                     cv.put(recURL, jsonUrl);
+                    cv.put(recLength, jsonIngredients.length());
                     db.insertOrThrow(recipesTable, null, cv);
                 }
             } catch (IOException e) {

@@ -22,13 +22,14 @@ import java.util.Locale;
 public class SearchResults extends Activity {
 
     ProgressDialog mProgressDialog;
-    static String[] selIngredients;
+    String[] selIngredients;
     static String recipeName;
     String selIngredientsDummy = null;
     int rowCount = 0;
     static ArrayList<HashMap<String, String>> list;
     final String resMismatches = DatabaseHelper.resMismatches;
     final String recSize = "size";
+    String[] selIngredientsLower;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,7 +127,7 @@ public class SearchResults extends Activity {
                 String id;
                 String ingredientsLower;
 
-                String[] selIngredientsLower = new String[selIngredients.length];
+                selIngredientsLower = new String[selIngredients.length];
                 for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
 
                 long oldTime = System.nanoTime();
@@ -155,6 +156,11 @@ public class SearchResults extends Activity {
                 if (selIngredients != null) {
                     Collections.sort(list, new LengthComparator());
                     Collections.sort(list, new MiscountComparator());
+                    String[] listArray = new String[list.size()];
+                    for(int i = 0; i < list.size(); i++) {
+                        listArray[i] = list.get(i).get(recID);
+                    }
+                    database.createResultsView(listArray);
                 }
             }
             return null;
@@ -194,6 +200,7 @@ public class SearchResults extends Activity {
             } else {
                 Intent intent = new Intent(SearchResults.this, DisplayResults.class);
                 intent.putExtra("com.lcneves.cookme.ROW", rowCount);
+                intent.putExtra("com.lcneves.cookme.INGREDIENTS_LOWER", selIngredientsLower);
                 startActivity(intent);
             }
         }

@@ -33,6 +33,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     static final String shoID="_id";
     static final String shoName="ShoName";
 
+    static final String sortTable="SortTable";
+    static final String resultsView = "resultsView";
+    static final String sortID="ID";
+    static final String sortOrder="ID_Order";
+
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -54,7 +59,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void recreateDatabase() {
         SQLiteDatabase db=this.getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS "+recipesTable);
-        db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recIngredientsLower+" TEXT, "+recURL+" TEXT)");
+        db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recIngredientsLower+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER)");
+        db.close();
+    }
+
+    public void createResultsView(String[] sortedIDs) {
+        SQLiteDatabase db=this.getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS "+sortTable);
+        db.execSQL("DROP VIEW IF EXISTS "+resultsView);
+        db.execSQL("CREATE TABLE "+sortTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+sortID+" INTEGER, "+sortOrder+" INTEGER)");
+        db.beginTransaction();
+        for(int i = 0; i < sortedIDs.length; i++) {
+            ContentValues cv=new ContentValues();
+            cv.put(sortID, sortedIDs[i]);
+            cv.put(sortOrder, i);
+            db.insertOrThrow(sortTable, null, cv);
+        }
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        StringBuilder IDBuilder = new StringBuilder("("+sortedIDs[0]);
+        for(int i = 1; i < sortedIDs.length; i++) {
+            IDBuilder.append(",");
+            IDBuilder.append(sortedIDs[i]);
+        }
+        IDBuilder.append(")");
+        db.execSQL("CREATE VIEW "+resultsView+" AS SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" JOIN "+sortTable+" ON "+recipesTable+"."+recID+"="+sortTable+"."+sortID+" WHERE "+recID+" IN "+IDBuilder.toString()+" ORDER BY "+sortOrder);
         db.close();
     }
 

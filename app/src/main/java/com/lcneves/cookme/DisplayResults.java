@@ -5,18 +5,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 import java.util.HashMap;
+import java.util.Locale;
 
 
 public class DisplayResults extends ListActivity {
@@ -26,8 +34,9 @@ public class DisplayResults extends ListActivity {
     static final String resMatches="Matches";
     static final String resMismatches="Mismatches";
     int rowCount;
-    final String resultsView = "resultsView";
     final String recID = DatabaseHelper.recID;
+    final String resultsView = DatabaseHelper.resultsView;
+    String[] selIngredientsLower;
     DatabaseHelper databaseHelper = new DatabaseHelper(this);
 
     @Override
@@ -36,13 +45,8 @@ public class DisplayResults extends ListActivity {
         setContentView(R.layout.activity_display_results);
         Intent intent = getIntent();
         rowCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
-        SQLiteDatabase database = databaseHelper.getWritableDatabase();
-        String[] IDs = new String[rowCount];
-        for(int i = 0; i < rowCount; i++) {
-            IDs[i] = SearchResults.list.get(i).get(recID);
-        }
-        database.execSQL("DROP VIEW IF EXISTS "+resultsView);
-        database.execSQL("CREATE VIEW "+resultsView+" AS SELECT "+DatabaseHelper.recID+","+DatabaseHelper.recName+","+DatabaseHelper.recIngredients+","+DatabaseHelper.recURL+" FROM "+DatabaseHelper.recipesTable+" WHERE "+DatabaseHelper.recID+" IN "+makePlaceholders(rowCount), IDs);
+        selIngredientsLower = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS_LOWER");
+        SQLiteDatabase database = databaseHelper.getReadableDatabase();
         Cursor cursor = database.query(resultsView,
                 new String[] {DatabaseHelper.recID,DatabaseHelper.recName,DatabaseHelper.recIngredients,DatabaseHelper.recURL},
                 null, null, null, null, null);
@@ -178,26 +182,27 @@ public class DisplayResults extends ListActivity {
         }
     }
 
-    private static class ComplexCursorAdapter extends SimpleCursorAdapter {
+    private class ComplexCursorAdapter extends SimpleCursorAdapter {
 
         public ComplexCursorAdapter(Context context, int layout, Cursor c,
                                String[] from, int[] to, int flags) {
             super(context, layout, c, from, to, flags);
         }
 
-       /* @Override
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
             View view = super.getView(position, convertView, parent);
-            CheckBox checkBox = (CheckBox) view.findViewById(R.id.checkBox);
-            TextView item = (TextView) view.findViewById(R.id.grocery);
-            String row_item = item.getText().toString();
-            if (SearchDialogFragment.checkedList.contains(row_item)) {
-                checkBox.setChecked(true);
-            } else {
-                checkBox.setChecked(false);
+            TextView ingredients = (TextView) view.findViewById(R.id.ingredients);
+            Spannable ingredientsSpan = new SpannableString(ingredients.getText());
+            String ingredientsSpanString = ingredientsSpan.toString().toLowerCase(Locale.ENGLISH);
+            for(String s : selIngredientsLower) {
+                for(int j = -1; (j = ingredientsSpanString.indexOf(s, j + 1)) != -1;) {
+                    ingredientsSpan.setSpan(new ForegroundColorSpan(Color.argb(208, 0, 127, 0)), j, j + s.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
             }
+            ingredients.setText(ingredientsSpan, TextView.BufferType.SPANNABLE);
             return view;
-        }*/
+        }
     }
 }
