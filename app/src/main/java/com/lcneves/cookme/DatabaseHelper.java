@@ -57,7 +57,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void recreateDatabase() {
         SQLiteDatabase db=this.getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS "+recipesTable);
-        db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recIngredientsLower+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER)");
+        db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recIngredientsLower+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER, "+resMismatches+" INTEGER)");
         db.close();
     }
 
@@ -94,9 +94,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getResultsViewCursor(int displayRows) {
         SQLiteDatabase db=this.getReadableDatabase();
-        return db.query(resultsTable,
-                new String[] {recID,recName,recIngredients,recURL},
-                null, null, null, null, resMismatches+","+recLength, Integer.toString(displayRows));
+        return db.rawQuery("SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" WHERE "+resMismatches+" >= 0 ORDER BY "+resMismatches+","+recLength+" LIMIT "+Integer.toString(displayRows), null);
     }
 
     public void dropRecipes() {

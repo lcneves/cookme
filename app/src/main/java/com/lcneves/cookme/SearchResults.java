@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -24,11 +25,11 @@ public class SearchResults extends Activity {
 
     ProgressDialog mProgressDialog;
     String[] selIngredients;
-    static String recipeName;
+    String recipeName;
     String selIngredientsDummy = null;
     int rowCount = 0;
-    static ArrayList<HashMap<String, String>> list;
     final String resMismatches = DatabaseHelper.resMismatches;
+    final String recipesTable = DatabaseHelper.recipesTable;
     final String recID = DatabaseHelper.recID;
     final String recName = DatabaseHelper.recName;
     final String recIngredients = DatabaseHelper.recIngredients;
@@ -38,6 +39,7 @@ public class SearchResults extends Activity {
     final String recSize = "size";
     String[] selIngredientsLower;
     int searchSimpleRows;
+    boolean results;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +49,7 @@ public class SearchResults extends Activity {
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
         searchSimpleRows = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
-        list = null;
+        boolean results = false;
         Log.d("com.lcneves.cookme.SearchResults", "selIngredients= "+selIngredients+", recipeName= "+recipeName);
 
         searchResults();
@@ -117,17 +119,19 @@ public class SearchResults extends Activity {
             }
             Log.d("com.lcneves.cookme.SearchResults", "whereCondition is: "+whereCondition);
             Cursor cursor = db.query(DatabaseHelper.recipesTable,
-                    new String[] {recName, recIngredients, recURL, recLength, recIngredientsLower},
+                    new String[] {recID, recIngredientsLower},
                     whereCondition, null, null, null, null);
             if(cursor.moveToFirst()) {
+                results = true;
                 rowCount = cursor.getCount();
                 progressMessage = "Found "+rowCount+" recipes matching your ingredients. Processing...";
-                list = new ArrayList<HashMap<String, String>>(rowCount);
+                /*list = new ArrayList<HashMap<String, String>>(rowCount);
                 int nameIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recName);
                 int ingredientsIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredients);
                 int urlIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recURL);
-                int lengthIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recLength);
+                int lengthIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recLength);*/
                 int ingredientsLowerIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredientsLower);
+                int idIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recID);
                 long startTime = System.nanoTime();
                 int selLength;
                 if (selIngredients != null) {
@@ -135,47 +139,48 @@ public class SearchResults extends Activity {
                 } else {
                     selLength = 0;
                 }
-                ContentValues cv = new ContentValues(5);
-                String ingredientsLower;
+                /*String resultsTable = DatabaseHelper.resultsTable;
+                String comma = ",";
+                SQLiteStatement st = db.compileStatement("INSERT INTO "+resultsTable+" ("+recID+comma+recName+comma+recIngredients+comma+recURL+comma+recLength+comma+resMismatches+") VALUES (?,?,?,?,?,?);");
+
                 String name;
                 String ingredients;
                 String url;
-                String length;
-                String resultsTable = DatabaseHelper.resultsTable;
+                int length;*/
+                String ingredientsLower;
+                int id;
 
                 selIngredientsLower = new String[selIngredients.length];
                 for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
 
                 long oldTime = System.nanoTime();
-                db.execSQL("DROP TABLE IF EXISTS "+resultsTable);
-                db.execSQL("CREATE TABLE "+resultsTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER, "+resMismatches+" INTEGER)");
                 db.beginTransaction();
-
+                db.execSQL("UPDATE "+ recipesTable + " SET "+resMismatches +" = NULL WHERE "+resMismatches+" NOT NULL");
+                Log.d("com.lcneves.cookme.SearchResults", "Setting resMismatches to NULL took " + ((System.nanoTime() - oldTime)) / 1000000+" ms");
                 for (int i = 0; i < rowCount; i++) {
                     if(System.nanoTime() - oldTime > 1e9) { // update every second
                         oldTime = System.nanoTime();
                         publishProgress((int) (i));
                     }
                     ingredientsLower = cursor.getString(ingredientsLowerIndex);
-                    name = cursor.getString(nameIndex);
+                    /*name = cursor.getString(nameIndex);
                     ingredients = cursor.getString(ingredientsIndex);
                     url = cursor.getString(urlIndex);
-                    length = cursor.getString(lengthIndex);
+                    length = cursor.getInt(lengthIndex);*/
+                    id = cursor.getInt(idIndex);
                     int misCount = 0;
                     for (int j = 0; j < selLength; j++) {
                         if (!ingredientsLower.contains(selIngredientsLower[j])) ++misCount;
                     }
-                    cv.put(recName, name);
-                    cv.put(recIngredients, ingredients);
-                    cv.put(recURL, url);
-                    cv.put(recLength, length);
-                    cv.put(resMismatches, misCount);
-                    db.insertOrThrow(resultsTable, null, cv);
-                    cv.clear();
-                    /*map.put(recID, id);
-                    map.put(resMismatches, Integer.toString(misCount));
-                    map.put(recSize, Integer.toString(ingredientsLower.length()));
-                    list.add(map);*/
+                    db.execSQL("UPDATE "+ recipesTable + " SET "+ resMismatches +" = "+misCount+" WHERE "+recID+" = "+id);
+                 /*   st.bindLong(1, i);
+                    st.bindString(2, name);
+                    st.bindString(3, ingredients);
+                    st.bindString(4, url);
+                    st.bindLong(5, length);
+                    st.bindLong(6, misCount);
+                    st.executeInsert();
+                    st.clearBindings();*/
                     cursor.moveToNext();
                 }
                 db.setTransactionSuccessful();
@@ -228,7 +233,7 @@ public class SearchResults extends Activity {
         protected void onPostExecute(String result) {
             mWakeLock.release();
             mProgressDialog.dismiss();
-            if(list == null) {
+            if(!results) {
                 Toast toast = Toast.makeText(SearchResults.this, "No recipes found!", Toast.LENGTH_LONG);
                 toast.show();
                 Intent intent = new Intent(SearchResults.this, MainActivity.class);

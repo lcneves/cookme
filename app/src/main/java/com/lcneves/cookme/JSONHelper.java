@@ -6,10 +6,12 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.util.JsonReader;
 import android.util.Log;
 
@@ -30,6 +32,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.util.Locale;
 import java.util.zip.GZIPInputStream;
 
 import android.app.ProgressDialog;
@@ -49,6 +52,7 @@ public class JSONHelper extends Activity {
     final String recURL = DatabaseHelper.recURL;
     final String recLength = DatabaseHelper.recLength;
     final String recipesTable = DatabaseHelper.recipesTable;
+    final String resMismatches = DatabaseHelper.resMismatches;
     static final String fileNameOld = "recipeitems-latest.json";
     static final String fileNameNew = "recipeitems-edited.json";
     static final String fileNameGz = "recipeitems-latest.json.gz";
@@ -437,6 +441,9 @@ public class JSONHelper extends Activity {
             final String URL = "url";
             int lineProgress = 0;
             long oldTime = System.nanoTime();
+            String comma = ",";
+            SQLiteStatement st = db.compileStatement("INSERT INTO "+recipesTable+" ("+recName+comma+recIngredients+comma+recIngredientsLower+comma+recURL+comma+recLength+comma+resMismatches+") VALUES (?,?,?,?,?,?);");
+
             try {
                 jsonReader = new JsonReader(new BufferedReader(new FileReader(fileNew)));
                 jsonReader.beginArray();
@@ -463,13 +470,14 @@ public class JSONHelper extends Activity {
                         publishProgress((int) (lineProgress));
                     }
                     jsonReader.endObject();
-                    ContentValues cv=new ContentValues();
-                    cv.put(recName, jsonName);
-                    cv.put(recIngredients, jsonIngredients);
-                    cv.put(recIngredientsLower, jsonIngredients.toLowerCase());
-                    cv.put(recURL, jsonUrl);
-                    cv.put(recLength, jsonIngredients.length());
-                    db.insertOrThrow(recipesTable, null, cv);
+                    st.bindString(1, jsonName);
+                    st.bindString(2, jsonIngredients);
+                    st.bindString(3, jsonIngredients.toLowerCase(Locale.ENGLISH));
+                    st.bindString(4, jsonUrl);
+                    st.bindLong(5, jsonIngredients.length());
+                    st.bindLong(6, -1);
+                    st.executeInsert();
+                    st.clearBindings();
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block
