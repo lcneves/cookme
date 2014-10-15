@@ -4,7 +4,6 @@ import android.app.ListActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -14,6 +13,7 @@ import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,10 +34,13 @@ public class DisplayResults extends ListActivity {
     static final String resMatches="Matches";
     static final String resMismatches="Mismatches";
     int rowCount;
-    final String recID = DatabaseHelper.recID;
-    final String resultsView = DatabaseHelper.resultsView;
+    int displayRows;
+    final int DISPLAY_ROWS_INCREASE = 20;
+    final String resultsView = DatabaseHelper.resultsTable;
     String[] selIngredientsLower;
     DatabaseHelper databaseHelper = new DatabaseHelper(this);
+    Cursor cursor;
+    ComplexCursorAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,11 +49,11 @@ public class DisplayResults extends ListActivity {
         Intent intent = getIntent();
         rowCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
         selIngredientsLower = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS_LOWER");
-        SQLiteDatabase database = databaseHelper.getReadableDatabase();
-        Cursor cursor = database.query(resultsView,
-                new String[] {DatabaseHelper.recID,DatabaseHelper.recName,DatabaseHelper.recIngredients,DatabaseHelper.recURL},
-                null, null, null, null, null);
-        ComplexCursorAdapter adapter = new ComplexCursorAdapter(
+        displayRows = rowCount + DISPLAY_ROWS_INCREASE;
+        Log.d("com.lcneves.cookme.DisplayResults", "About to get the cursor...");
+        cursor = databaseHelper.getResultsViewCursor(displayRows);
+        Log.d("com.lcneves.cookme.DisplayResults", "Got the cursor! It says: "+cursor.toString());
+        adapter = new ComplexCursorAdapter(
                 activity,
                 R.layout.list_item_simple,
                 cursor,
@@ -59,10 +62,24 @@ public class DisplayResults extends ListActivity {
                 new int[] { R.id.name, R.id.ingredients, R.id.url},
                 0
         );
+        Log.d("com.lcneves.cookme.DisplayResults", "Instantiated the adapter...");
         setListAdapter(adapter);
+        Log.d("com.lcneves.cookme.DisplayResults", "Set list adapter...");
         lv = getListView();
+        Log.d("com.lcneves.cookme.DisplayResults", "Got list view...");
         registerForContextMenu(lv);
         Log.d("com.lcneves.cookme.DisplayResults", "rowCount = "+ rowCount);
+
+        View footerView = ((LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
+        lv.addFooterView(footerView);
+        lv.setSelection(rowCount);
+    }
+
+    public void clickShowMore(View v) {
+        displayRows = displayRows + DISPLAY_ROWS_INCREASE;
+        cursor = databaseHelper.getResultsViewCursor(displayRows);
+        adapter.changeCursor(cursor);
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -82,10 +99,10 @@ public class DisplayResults extends ListActivity {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
         int menuItemIndex = item.getItemId();
         String[] recipe = new String[3];
-        HashMap<String, String> map = SearchResults.list.get(info.position);
-        recipe[0]=map.get(DatabaseHelper.recName);
-        recipe[1]=map.get(DatabaseHelper.recIngredients);
-        recipe[2]=map.get(DatabaseHelper.recURL);
+        cursor.moveToPosition(info.position);
+        recipe[0]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recName));
+        recipe[1]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recIngredients));
+        recipe[2]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recURL));
         switch (menuItemIndex) {
             case 0:
                 Intent intent = new Intent(this, RecipeViewer.class);
@@ -146,10 +163,10 @@ public class DisplayResults extends ListActivity {
     protected void onListItemClick(ListView l, View v, int pos, long id) {
         super.onListItemClick(l, v, pos, id);
         String[] recipe = new String[3];
-        HashMap<String, String> map = SearchResults.list.get(pos);
-        recipe[0]=map.get(DatabaseHelper.recName);
-        recipe[1]=map.get(DatabaseHelper.recIngredients);
-        recipe[2]=map.get(DatabaseHelper.recURL);
+        cursor.moveToPosition(pos);
+        recipe[0]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recName));
+        recipe[1]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recIngredients));
+        recipe[2]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recURL));
         Log.d("com.lcneves.cookme.DisplayResults", "Clicked! Recipe name is "+recipe[0]);
         Intent intent = new Intent(this, RecipeViewer.class);
         intent.putExtra("com.lcneves.cookme.RECIPE", recipe);

@@ -11,9 +11,14 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -22,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
@@ -42,6 +48,7 @@ public class SearchSimple extends ListActivity {
     ListView lv;
     ProgressDialog mProgressDialog;
     static String[] selIngredients;
+    String[] selIngredientsLower;
     static String recipeName;
     String selIngredientsDummy = null;
     static final String recipesTable="Recipes";
@@ -59,6 +66,8 @@ public class SearchSimple extends ListActivity {
         setContentView(R.layout.activity_search_simple);
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
+        selIngredientsLower = new String[selIngredients.length];
+        for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
         searchResults();
     }
@@ -104,11 +113,7 @@ public class SearchSimple extends ListActivity {
             }
             Log.d("com.lcneves.cookme.SearchSimple", "whereCondition is: " + whereCondition);
             if (selIngredients != null) {
-                if(selIngredients.length > 1) {
-                    cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
-                } else {
-                    cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
-                }
+                cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, recLength);
             } else {
                 cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
             }
@@ -134,7 +139,7 @@ public class SearchSimple extends ListActivity {
             mProgressDialog.dismiss();
             if(cursor.moveToFirst()) {
                 cursorCount = cursor.getCount();
-                SimpleCursorAdapter adapter = new SimpleCursorAdapter(activity,
+                ComplexCursorAdapter adapter = new ComplexCursorAdapter(activity,
                         R.layout.list_item_simple,
                         cursor,
                         new String[]{recName, recIngredients, recURL},
@@ -283,8 +288,31 @@ public class SearchSimple extends ListActivity {
         intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
         intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
         intent.putExtra("com.lcneves.cookme.ROW", cursorCount);
-        intent.putExtra("com.lcneves.cookme.MAX_MISMATCHES", 1);
         startActivity(intent);
+    }
+
+    private class ComplexCursorAdapter extends SimpleCursorAdapter {
+
+        public ComplexCursorAdapter(Context context, int layout, Cursor c,
+                                    String[] from, int[] to, int flags) {
+            super(context, layout, c, from, to, flags);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            View view = super.getView(position, convertView, parent);
+            TextView ingredients = (TextView) view.findViewById(R.id.ingredients);
+            Spannable ingredientsSpan = new SpannableString(ingredients.getText());
+            String ingredientsSpanString = ingredientsSpan.toString().toLowerCase(Locale.ENGLISH);
+            for(String s : selIngredientsLower) {
+                for(int j = -1; (j = ingredientsSpanString.indexOf(s, j + 1)) != -1;) {
+                    ingredientsSpan.setSpan(new ForegroundColorSpan(Color.argb(208, 0, 127, 0)), j, j + s.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+            }
+            ingredients.setText(ingredientsSpan, TextView.BufferType.SPANNABLE);
+            return view;
+        }
     }
 
     @Override

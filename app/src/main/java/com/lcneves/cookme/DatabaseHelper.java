@@ -4,8 +4,6 @@ package com.lcneves.cookme;
  * Created by lucas on 10.09.14.
  */
 
-        import java.util.Locale;
-
         import android.content.ContentValues;
         import android.content.Context;
         import android.database.Cursor;
@@ -34,7 +32,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     static final String shoName="ShoName";
 
     static final String sortTable="SortTable";
-    static final String resultsView = "resultsView";
+    static final String resultsTable = "resultsTable";
     static final String sortID="ID";
     static final String sortOrder="ID_Order";
 
@@ -63,10 +61,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void recreateResultsTable() {
+        SQLiteDatabase db=this.getWritableDatabase();
+        db.execSQL("DROP TABLE IF EXISTS "+resultsTable);
+        db.execSQL("CREATE TABLE "+resultsTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER, "+resMismatches+" INTEGER)");
+        db.close();
+    }
+
     public void createResultsView(String[] sortedIDs) {
         SQLiteDatabase db=this.getWritableDatabase();
         db.execSQL("DROP TABLE IF EXISTS "+sortTable);
-        db.execSQL("DROP VIEW IF EXISTS "+resultsView);
+        db.execSQL("DROP TABLE IF EXISTS "+ resultsTable);
         db.execSQL("CREATE TABLE "+sortTable+" ("+sortOrder+" INTEGER PRIMARY KEY, "+sortID+" INTEGER)");
         db.beginTransaction();
         for(int i = 0; i < sortedIDs.length; i++) {
@@ -83,8 +88,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             IDBuilder.append(sortedIDs[i]);
         }
         IDBuilder.append(")");
-        db.execSQL("CREATE VIEW "+resultsView+" AS SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" JOIN "+sortTable+" ON "+recipesTable+"."+recID+"="+sortTable+"."+sortID+" WHERE "+recID+" IN "+IDBuilder.toString()+" ORDER BY "+sortOrder);
+        db.execSQL("CREATE TABLE "+ resultsTable +" AS SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" JOIN "+sortTable+" ON "+recipesTable+"."+recID+"="+sortTable+"."+sortID+" WHERE "+recID+" IN "+IDBuilder.toString()+" ORDER BY "+sortOrder);
         db.close();
+    }
+
+    public Cursor getResultsViewCursor(int displayRows) {
+        SQLiteDatabase db=this.getReadableDatabase();
+        return db.query(resultsTable,
+                new String[] {recID,recName,recIngredients,recURL},
+                null, null, null, null, resMismatches+","+recLength, Integer.toString(displayRows));
     }
 
     public void dropRecipes() {

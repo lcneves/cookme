@@ -2,6 +2,7 @@ package com.lcneves.cookme;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -28,8 +29,15 @@ public class SearchResults extends Activity {
     int rowCount = 0;
     static ArrayList<HashMap<String, String>> list;
     final String resMismatches = DatabaseHelper.resMismatches;
+    final String recID = DatabaseHelper.recID;
+    final String recName = DatabaseHelper.recName;
+    final String recIngredients = DatabaseHelper.recIngredients;
+    final String recIngredientsLower = DatabaseHelper.recIngredientsLower;
+    final String recURL = DatabaseHelper.recURL;
+    final String recLength = DatabaseHelper.recLength;
     final String recSize = "size";
     String[] selIngredientsLower;
+    int searchSimpleRows;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +46,7 @@ public class SearchResults extends Activity {
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
+        searchSimpleRows = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
         list = null;
         Log.d("com.lcneves.cookme.SearchResults", "selIngredients= "+selIngredients+", recipeName= "+recipeName);
 
@@ -107,14 +116,17 @@ public class SearchResults extends Activity {
                 }
             }
             Log.d("com.lcneves.cookme.SearchResults", "whereCondition is: "+whereCondition);
-            Cursor cursor = db.query(DatabaseHelper.recipesTable, new String[] {DatabaseHelper.recID, DatabaseHelper.recIngredientsLower}, whereCondition, null, null, null, null);
+            Cursor cursor = db.query(DatabaseHelper.recipesTable,
+                    new String[] {recName, recIngredients, recURL, recLength, recIngredientsLower},
+                    whereCondition, null, null, null, null);
             if(cursor.moveToFirst()) {
-                final String recID = DatabaseHelper.recID;
-
                 rowCount = cursor.getCount();
                 progressMessage = "Found "+rowCount+" recipes matching your ingredients. Processing...";
                 list = new ArrayList<HashMap<String, String>>(rowCount);
-                int IDIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recID);
+                int nameIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recName);
+                int ingredientsIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredients);
+                int urlIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recURL);
+                int lengthIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recLength);
                 int ingredientsLowerIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredientsLower);
                 long startTime = System.nanoTime();
                 int selLength;
@@ -123,45 +135,69 @@ public class SearchResults extends Activity {
                 } else {
                     selLength = 0;
                 }
-                HashMap<String, String> map;
-                String id;
+                ContentValues cv = new ContentValues(5);
                 String ingredientsLower;
+                String name;
+                String ingredients;
+                String url;
+                String length;
+                String resultsTable = DatabaseHelper.resultsTable;
 
                 selIngredientsLower = new String[selIngredients.length];
                 for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
 
                 long oldTime = System.nanoTime();
+                db.execSQL("DROP TABLE IF EXISTS "+resultsTable);
+                db.execSQL("CREATE TABLE "+resultsTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER, "+resMismatches+" INTEGER)");
+                db.beginTransaction();
 
-                parse: for (int i = 0; i < rowCount; i++) {
+                for (int i = 0; i < rowCount; i++) {
                     if(System.nanoTime() - oldTime > 1e9) { // update every second
                         oldTime = System.nanoTime();
                         publishProgress((int) (i));
                     }
-                    id = cursor.getString(IDIndex);
                     ingredientsLower = cursor.getString(ingredientsLowerIndex);
+                    name = cursor.getString(nameIndex);
+                    ingredients = cursor.getString(ingredientsIndex);
+                    url = cursor.getString(urlIndex);
+                    length = cursor.getString(lengthIndex);
                     int misCount = 0;
-                    map = new HashMap<String, String>(3, 1);
                     for (int j = 0; j < selLength; j++) {
                         if (!ingredientsLower.contains(selIngredientsLower[j])) ++misCount;
                     }
-                    map.put(recID, id);
+                    cv.put(recName, name);
+                    cv.put(recIngredients, ingredients);
+                    cv.put(recURL, url);
+                    cv.put(recLength, length);
+                    cv.put(resMismatches, misCount);
+                    db.insertOrThrow(resultsTable, null, cv);
+                    cv.clear();
+                    /*map.put(recID, id);
                     map.put(resMismatches, Integer.toString(misCount));
                     map.put(recSize, Integer.toString(ingredientsLower.length()));
-                    list.add(map);
+                    list.add(map);*/
                     cursor.moveToNext();
                 }
+                db.setTransactionSuccessful();
+                db.endTransaction();
                 Log.d("com.lcneves.cookme.SearchResults", "Processing took " + ((System.nanoTime() - startTime)) / 1000000);
                 cursor.close();
                 db.close();
-                if (selIngredients != null) {
+                /*if (selIngredients != null) {
+                    startTime = System.nanoTime();
                     Collections.sort(list, new LengthComparator());
                     Collections.sort(list, new MiscountComparator());
+                    Log.d("com.lcneves.cookme.SearchResults", "Sorting took "+((System.nanoTime()-startTime)/1000000));
+                    startTime = System.nanoTime();
                     String[] listArray = new String[list.size()];
                     for(int i = 0; i < list.size(); i++) {
                         listArray[i] = list.get(i).get(recID);
                     }
+                    Log.d("com.lcneves.cookme.SearchResults", "Creating string array took "+((System.nanoTime()-startTime)/1000000));
+                    startTime = System.nanoTime();
                     database.createResultsView(listArray);
-                }
+                    Log.d("com.lcneves.cookme.SearchResults", "Creating view took "+((System.nanoTime()-startTime)/1000000));
+                }*/
             }
             return null;
         }
@@ -199,7 +235,7 @@ public class SearchResults extends Activity {
                 startActivity(intent);
             } else {
                 Intent intent = new Intent(SearchResults.this, DisplayResults.class);
-                intent.putExtra("com.lcneves.cookme.ROW", rowCount);
+                intent.putExtra("com.lcneves.cookme.ROW", searchSimpleRows);
                 intent.putExtra("com.lcneves.cookme.INGREDIENTS_LOWER", selIngredientsLower);
                 startActivity(intent);
             }
