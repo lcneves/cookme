@@ -40,16 +40,7 @@
             android:name=".RecipeViewer"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:label="@string/title_activity_recipe_viewer"
-            android:parentActivityName=".DisplayResults" >
-        </activity>
-        <activity
-            android:name=".DisplayResults"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:label="@string/title_activity_display_results"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.lcneves.cookme.MainActivity" />
+            android:parentActivityName=".SearchResults" >
         </activity>
         <activity
             android:name=".SearchSimple"

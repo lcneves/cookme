@@ -66,8 +66,6 @@ public class SearchSimple extends ListActivity {
         setContentView(R.layout.activity_search_simple);
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
-        selIngredientsLower = new String[selIngredients.length];
-        for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
         searchResults();
     }
@@ -76,7 +74,7 @@ public class SearchSimple extends ListActivity {
         mProgressDialog = new ProgressDialog(SearchSimple.this);
         mProgressDialog.setMessage("Searching recipes...");
         mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        mProgressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progress_dialog_anim));
         mProgressDialog.setCancelable(false);
 
         final SearchTask searchTask = new SearchTask(SearchSimple.this);
@@ -118,6 +116,9 @@ public class SearchSimple extends ListActivity {
                 cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
             }
             Log.d("com.lcneves.cookme.SearchResults", "Simple search took " + (((System.nanoTime() - startTime)) / 1000000)+" ms");
+            selIngredientsLower = new String[selIngredients.length];
+            for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
+            cursor.moveToFirst();
             return null;
         }
 
@@ -136,7 +137,6 @@ public class SearchSimple extends ListActivity {
         @Override
         protected void onPostExecute(String result) {
             mWakeLock.release();
-            mProgressDialog.dismiss();
             if(cursor.moveToFirst()) {
                 cursorCount = cursor.getCount();
                 ComplexCursorAdapter adapter = new ComplexCursorAdapter(activity,
@@ -188,6 +188,7 @@ public class SearchSimple extends ListActivity {
                     startActivity(intent);
                 }
             }
+            mProgressDialog.dismiss();
         }
     }
 

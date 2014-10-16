@@ -93,7 +93,7 @@ public class RecipeViewer extends Activity {
         if(id == android.R.id.home) {
             Log.d("com.lcneves.cookme.RecipeViewer", "previousActivity = "+previousActivity);
             if(previousActivity.equals("display")) {
-                Intent intent = new Intent(this, DisplayResults.class);
+                Intent intent = new Intent(this, SearchResults.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 startActivity(intent);
             }
