@@ -98,7 +98,7 @@ public class SearchResults extends Activity {
 
         @Override
         protected String doInBackground(final String... selIngredientsDummy) {
-            DatabaseHelper database = new DatabaseHelper(getApplicationContext());
+            /*DatabaseHelper database = new DatabaseHelper(getApplicationContext());
             SQLiteDatabase db = database.getWritableDatabase();
             String whereCondition = "";
 
@@ -125,11 +125,11 @@ public class SearchResults extends Activity {
                 results = true;
                 rowCount = cursor.getCount();
                 progressMessage = "Found "+rowCount+" recipes matching your ingredients. Processing...";
-                /*list = new ArrayList<HashMap<String, String>>(rowCount);
+                *//*list = new ArrayList<HashMap<String, String>>(rowCount);
                 int nameIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recName);
                 int ingredientsIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredients);
                 int urlIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recURL);
-                int lengthIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recLength);*/
+                int lengthIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recLength);*//*
                 int ingredientsLowerIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recIngredientsLower);
                 int idIndex = cursor.getColumnIndexOrThrow(DatabaseHelper.recID);
                 long startTime = System.nanoTime();
@@ -139,14 +139,14 @@ public class SearchResults extends Activity {
                 } else {
                     selLength = 0;
                 }
-                /*String resultsTable = DatabaseHelper.resultsTable;
+                *//*String resultsTable = DatabaseHelper.resultsTable;
                 String comma = ",";
                 SQLiteStatement st = db.compileStatement("INSERT INTO "+resultsTable+" ("+recID+comma+recName+comma+recIngredients+comma+recURL+comma+recLength+comma+resMismatches+") VALUES (?,?,?,?,?,?);");
 
                 String name;
                 String ingredients;
                 String url;
-                int length;*/
+                int length;*//*
                 String ingredientsLower;
                 int id;
 
@@ -163,24 +163,24 @@ public class SearchResults extends Activity {
                         publishProgress((int) (i));
                     }
                     ingredientsLower = cursor.getString(ingredientsLowerIndex);
-                    /*name = cursor.getString(nameIndex);
+                    *//*name = cursor.getString(nameIndex);
                     ingredients = cursor.getString(ingredientsIndex);
                     url = cursor.getString(urlIndex);
-                    length = cursor.getInt(lengthIndex);*/
+                    length = cursor.getInt(lengthIndex);*//*
                     id = cursor.getInt(idIndex);
                     int misCount = 0;
                     for (int j = 0; j < selLength; j++) {
                         if (!ingredientsLower.contains(selIngredientsLower[j])) ++misCount;
                     }
                     db.execSQL("UPDATE "+ recipesTable + " SET "+ resMismatches +" = "+misCount+" WHERE "+recID+" = "+id);
-                 /*   st.bindLong(1, i);
+                 *//*   st.bindLong(1, i);
                     st.bindString(2, name);
                     st.bindString(3, ingredients);
                     st.bindString(4, url);
                     st.bindLong(5, length);
                     st.bindLong(6, misCount);
                     st.executeInsert();
-                    st.clearBindings();*/
+                    st.clearBindings();*//*
                     cursor.moveToNext();
                 }
                 db.setTransactionSuccessful();
@@ -188,7 +188,7 @@ public class SearchResults extends Activity {
                 Log.d("com.lcneves.cookme.SearchResults", "Processing took " + ((System.nanoTime() - startTime)) / 1000000);
                 cursor.close();
                 db.close();
-                /*if (selIngredients != null) {
+                *//*if (selIngredients != null) {
                     startTime = System.nanoTime();
                     Collections.sort(list, new LengthComparator());
                     Collections.sort(list, new MiscountComparator());
@@ -203,7 +203,33 @@ public class SearchResults extends Activity {
                     database.createResultsView(listArray);
                     Log.d("com.lcneves.cookme.SearchResults", "Creating view took "+((System.nanoTime()-startTime)/1000000));
                 }*/
+            StringBuilder sb = new StringBuilder("CREATE VIEW ");
+            sb.append(DatabaseHelper.RESULTS_VIEW);
+            sb.append(" AS SELECT Recipes.*,Count(r._id) as CountMatches FROM (");
+
+            final String QUERY_LIKE = "SELECT _id FROM Recipes WHERE Ingredients LIKE '%%%s%%'";
+            sb.append(String.format(QUERY_LIKE, selIngredients[0]));
+            for (int i = 1; i < selIngredients.length; ++i) {
+                sb.append(" UNION ALL ");
+                sb.append(String.format(QUERY_LIKE, selIngredients[i]));
             }
+
+            sb.append(") AS r INNER JOIN Recipes ON r._id = Recipes._id GROUP BY r._id");
+            sb.append(" ORDER BY CountMatches DESC, LENGTH(Ingredients)");
+
+            DatabaseHelper database = new DatabaseHelper(getApplicationContext());
+            SQLiteDatabase db = database.getWritableDatabase();
+
+            long startTime = System.nanoTime();
+            db.execSQL("DROP VIEW IF EXISTS " + DatabaseHelper.RESULTS_VIEW);
+            Log.d("com.lcneves.cookme.SearchResults", "Dropping took "+((System.nanoTime()-startTime)/1000000));
+            startTime = System.nanoTime();
+            db.execSQL(sb.toString());
+            Log.d("com.lcneves.cookme.SearchResults", "Executing SQL took "+((System.nanoTime()-startTime)/1000000));
+
+            results = 0 < db.query(DatabaseHelper.RESULTS_VIEW, new String[]{"_id"}, null, null, null, null, null, "1").getCount();
+
+            db.close();
             return null;
         }
 
@@ -241,7 +267,7 @@ public class SearchResults extends Activity {
             } else {
                 Intent intent = new Intent(SearchResults.this, DisplayResults.class);
                 intent.putExtra("com.lcneves.cookme.ROW", searchSimpleRows);
-                intent.putExtra("com.lcneves.cookme.INGREDIENTS_LOWER", selIngredientsLower);
+                intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
                 startActivity(intent);
             }
         }

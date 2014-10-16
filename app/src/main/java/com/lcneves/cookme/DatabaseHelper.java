@@ -33,6 +33,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     static final String sortTable="SortTable";
     static final String resultsTable = "resultsTable";
+    static final String RESULTS_VIEW = "ResultsView";
     static final String sortID="ID";
     static final String sortOrder="ID_Order";
 
@@ -94,7 +95,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public Cursor getResultsViewCursor(int displayRows) {
         SQLiteDatabase db=this.getReadableDatabase();
-        return db.rawQuery("SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" WHERE "+resMismatches+" >= 0 ORDER BY "+resMismatches+","+recLength+" LIMIT "+Integer.toString(displayRows), null);
+        return db.rawQuery("SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+RESULTS_VIEW+" WHERE "+resMismatches+" >= 0 ORDER BY CountMatches LIMIT "+Integer.toString(displayRows), null);
     }
 
     public void dropRecipes() {

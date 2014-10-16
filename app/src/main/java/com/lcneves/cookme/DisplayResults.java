@@ -37,6 +37,7 @@ public class DisplayResults extends ListActivity {
     int displayRows;
     final int DISPLAY_ROWS_INCREASE = 20;
     final String resultsView = DatabaseHelper.resultsTable;
+    String[] selIngredients;
     String[] selIngredientsLower;
     DatabaseHelper databaseHelper = new DatabaseHelper(this);
     Cursor cursor;
@@ -48,7 +49,9 @@ public class DisplayResults extends ListActivity {
         setContentView(R.layout.activity_display_results);
         Intent intent = getIntent();
         rowCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
-        selIngredientsLower = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS_LOWER");
+        selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
+        selIngredientsLower = new String[selIngredients.length];
+        for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
         displayRows = rowCount + DISPLAY_ROWS_INCREASE;
         Log.d("com.lcneves.cookme.DisplayResults", "About to get the cursor...");
         cursor = databaseHelper.getResultsViewCursor(displayRows);
