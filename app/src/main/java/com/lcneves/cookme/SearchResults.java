@@ -121,15 +121,19 @@ public class SearchResults extends ListActivity {
 
         @Override
         protected String doInBackground(final String... selIngredientsDummy) {
+            String nameLike = "";
+            if (recipeName != null) nameLike = " AND "+recName+" LIKE '%"+recipeName+"%\'";
             StringBuilder sb = new StringBuilder("CREATE VIEW ");
             sb.append(DatabaseHelper.RESULTS_VIEW);
             sb.append(" AS SELECT Recipes.*,Count(r._id) as CountMatches FROM (");
 
-            final String QUERY_LIKE = "SELECT _id FROM Recipes WHERE Ingredients LIKE '%%%s%%'";
-            sb.append(String.format(QUERY_LIKE, selIngredients[0]));
+            final String QUERY_LIKE = "SELECT _id FROM Recipes WHERE Ingredients LIKE '%%%s%%'%s";
+
+            sb.append(String.format(QUERY_LIKE, selIngredients[0], nameLike));
+
             for (int i = 1; i < selIngredients.length; ++i) {
                 sb.append(" UNION ALL ");
-                sb.append(String.format(QUERY_LIKE, selIngredients[i]));
+                sb.append(String.format(QUERY_LIKE, selIngredients[i], nameLike));
             }
 
             sb.append(") AS r INNER JOIN Recipes ON r._id = Recipes._id GROUP BY r._id");
