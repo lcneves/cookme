@@ -374,8 +374,7 @@ public class JSONHelper extends Activity {
                     lineCount++;
                 }
 
-                bw.write("]");
-
+                bw.write("{}]");
                 bw.close();
                 br.close();
             } catch (FileNotFoundException e1) {
@@ -442,7 +441,7 @@ public class JSONHelper extends Activity {
             int lineProgress = 0;
             long oldTime = System.nanoTime();
             String comma = ",";
-            SQLiteStatement st = db.compileStatement("INSERT INTO "+recipesTable+" ("+recName+comma+recIngredients+comma+recIngredientsLower+comma+recURL+comma+recLength+comma+resMismatches+") VALUES (?,?,?,?,?,?);");
+            SQLiteStatement st = db.compileStatement("INSERT INTO "+recipesTable+" ("+recName+comma+recIngredients+comma+recURL+") VALUES (?,?,?);");
 
             try {
                 jsonReader = new JsonReader(new BufferedReader(new FileReader(fileNew)));
@@ -470,14 +469,13 @@ public class JSONHelper extends Activity {
                         publishProgress((int) (lineProgress));
                     }
                     jsonReader.endObject();
-                    st.bindString(1, jsonName);
-                    st.bindString(2, jsonIngredients);
-                    st.bindString(3, jsonIngredients.toLowerCase(Locale.ENGLISH));
-                    st.bindString(4, jsonUrl);
-                    st.bindLong(5, jsonIngredients.length());
-                    st.bindLong(6, -1);
-                    st.executeInsert();
-                    st.clearBindings();
+                    if(jsonName != null && jsonIngredients != null && jsonUrl != null) {
+                        st.bindString(1, jsonName);
+                        st.bindString(2, jsonIngredients);
+                        st.bindString(3, jsonUrl);
+                        st.executeInsert();
+                        st.clearBindings();
+                    }
                 }
             } catch (IOException e) {
                 // TODO Auto-generated catch block

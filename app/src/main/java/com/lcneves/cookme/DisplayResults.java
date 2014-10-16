@@ -22,6 +22,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -56,6 +57,12 @@ public class DisplayResults extends ListActivity {
         Log.d("com.lcneves.cookme.DisplayResults", "About to get the cursor...");
         cursor = databaseHelper.getResultsViewCursor(displayRows);
         Log.d("com.lcneves.cookme.DisplayResults", "Got the cursor! It says: "+cursor.toString());
+        if(!cursor.moveToFirst()) {
+            Toast toast = Toast.makeText(this, "No recipes found!", Toast.LENGTH_LONG);
+            toast.show();
+            Intent intent2 = new Intent(this, MainActivity.class);
+            startActivity(intent2);
+        }
         adapter = new ComplexCursorAdapter(
                 activity,
                 R.layout.list_item_simple,

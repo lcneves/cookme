@@ -39,7 +39,6 @@ public class SearchResults extends Activity {
     final String recSize = "size";
     String[] selIngredientsLower;
     int searchSimpleRows;
-    boolean results;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -226,9 +225,6 @@ public class SearchResults extends Activity {
             startTime = System.nanoTime();
             db.execSQL(sb.toString());
             Log.d("com.lcneves.cookme.SearchResults", "Executing SQL took "+((System.nanoTime()-startTime)/1000000));
-
-            results = 0 < db.query(DatabaseHelper.RESULTS_VIEW, new String[]{"_id"}, null, null, null, null, null, "1").getCount();
-
             db.close();
             return null;
         }
@@ -259,17 +255,10 @@ public class SearchResults extends Activity {
         protected void onPostExecute(String result) {
             mWakeLock.release();
             mProgressDialog.dismiss();
-            if(!results) {
-                Toast toast = Toast.makeText(SearchResults.this, "No recipes found!", Toast.LENGTH_LONG);
-                toast.show();
-                Intent intent = new Intent(SearchResults.this, MainActivity.class);
-                startActivity(intent);
-            } else {
-                Intent intent = new Intent(SearchResults.this, DisplayResults.class);
-                intent.putExtra("com.lcneves.cookme.ROW", searchSimpleRows);
-                intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
-                startActivity(intent);
-            }
+            Intent intent = new Intent(SearchResults.this, DisplayResults.class);
+            intent.putExtra("com.lcneves.cookme.ROW", searchSimpleRows);
+            intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
+            startActivity(intent);
         }
     }
 
