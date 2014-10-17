@@ -448,7 +448,7 @@ public class JSONHelper extends Activity {
                         if (name.equals(NAME)) {
                             jsonName = jsonReader.nextString().replace("&amp;", "&");
                         } else if (name.equals(INGREDIENTS)) {
-                            jsonIngredients = jsonReader.nextString().replace("&amp;", "&");
+                            jsonIngredients = jsonReader.nextString().replace("&amp;", "&").trim();
                         } else if (name.equals(URL)) {
                             jsonUrl = jsonReader.nextString();
                         } else {
@@ -461,7 +461,7 @@ public class JSONHelper extends Activity {
                         publishProgress((int) (lineProgress));
                     }
                     jsonReader.endObject();
-                    if(jsonName != null && jsonIngredients != null && jsonUrl != null) {
+                    if(jsonName != null && jsonIngredients != null && !jsonIngredients.isEmpty() && jsonUrl != null) {
                         st.bindString(1, jsonName);
                         st.bindString(2, jsonIngredients);
                         st.bindString(3, jsonUrl);

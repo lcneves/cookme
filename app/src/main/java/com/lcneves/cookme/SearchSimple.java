@@ -43,7 +43,12 @@ public class SearchSimple extends ListActivity {
     static String[] selIngredients;
     static String recipeName;
     Cursor cursor;
-    int cursorCount;
+    int displayRows;
+    final int DISPLAY_ROWS_INCREASE = 20;
+    boolean results;
+    boolean complex;
+    DatabaseHelper database = new DatabaseHelper(this);
+    ComplexCursorAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +57,9 @@ public class SearchSimple extends ListActivity {
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
+        displayRows = 0;
+        results = false;
+        complex = false;
         searchResults();
     }
 
@@ -85,8 +93,7 @@ public class SearchSimple extends ListActivity {
                     new String[] {DatabaseHelper.recID, DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL},
                     DatabaseHelper.createWhereClause(recipeName, selIngredients), null, null, null, DatabaseHelper.createSortClause(selIngredients));
 
-            Log.d("com.lcneves.cookme.SearchResults", "Simple search took " + (((System.nanoTime() - startTime)) / 1e6)+" ms");
-            cursor.moveToFirst();
+            if(!(results = cursor.moveToFirst()) && selIngredients.length > 0) searchComplex();
             return null;
         }
 
@@ -105,9 +112,9 @@ public class SearchSimple extends ListActivity {
         @Override
         protected void onPostExecute(String result) {
             mWakeLock.release();
-            if(cursor.moveToFirst()) {
-                cursorCount = cursor.getCount();
-                ComplexCursorAdapter adapter = new ComplexCursorAdapter(activity,
+            if(!complex) displayRows = cursor.getCount();
+            if(results) {
+                adapter = new ComplexCursorAdapter(activity,
                         R.layout.list_item_simple,
                         cursor,
                         new String[]{DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL},
@@ -116,30 +123,67 @@ public class SearchSimple extends ListActivity {
                 setListAdapter(adapter);
                 lv = getListView();
                 registerForContextMenu(lv);
-                if(selIngredients.length > 2) {
+                if(complex || selIngredients.length > 2) {
                     View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
                     lv.addFooterView(footerView);
                 }
-            } else switch (selIngredients.length) {
-                case 0:
-                    Toast.makeText(SearchSimple.this, "No recipes found with the name \"" + recipeName + "\"", Toast.LENGTH_LONG).show();
-                    startActivity(new Intent(SearchSimple.this, MainActivity.class));
-                    break;
-                case 1:
-                case 2:
-                    StringBuilder sb = new StringBuilder("No recipes");
-                    if (!recipeName.isEmpty()) sb.append(" for \"" + recipeName + "\"");
-                    sb.append(" found using \"" + selIngredients[0] + "\"");
-                    if (selIngredients.length == 2) sb.append(" and \"" + selIngredients[1] + "\"");
+            } else {
+                switch (selIngredients.length) {
+                    case 0:
+                        Toast.makeText(SearchSimple.this, "No recipes found with the name \"" + recipeName + "\"", Toast.LENGTH_LONG).show();
+                        break;
+                    case 1:
+                    case 2:
+                        StringBuilder sb = new StringBuilder("No recipes");
+                        if (!recipeName.isEmpty()) sb.append(" for \"" + recipeName + "\"");
+                        sb.append(" found using \"" + selIngredients[0] + "\"");
+                        if (selIngredients.length == 2) sb.append(" and \"" + selIngredients[1] + "\"");
 
-                    Toast.makeText(SearchSimple.this, sb.toString(), Toast.LENGTH_LONG).show();
-                    startActivity(new Intent(SearchSimple.this, MainActivity.class));
-                    break;
-                default:
-                    new SearchMoreDialogFragment().show(getFragmentManager(), "tag");
+                        Toast.makeText(SearchSimple.this, sb.toString(), Toast.LENGTH_LONG).show();
+                        break;
+                    default:
+                        Toast.makeText(SearchSimple.this, "No recipes found!", Toast.LENGTH_LONG).show();
+                }
+                startActivity(new Intent(SearchSimple.this, MainActivity.class));
             }
             mProgressDialog.dismiss();
         }
+    }
+
+    private void searchComplex() {
+        complex = true;
+        StringBuilder sb = new StringBuilder("CREATE VIEW ");
+        sb.append(DatabaseHelper.RESULTS_VIEW);
+        sb.append(" AS SELECT ");
+        sb.append(DatabaseHelper.recipesTable);
+        sb.append(".*,Count(r._id) as CountMatches FROM (");
+
+        final String QUERY_LIKE_STUB = "SELECT " + DatabaseHelper.recID + " FROM " + DatabaseHelper.recipesTable + " WHERE ";
+        sb.append(QUERY_LIKE_STUB);
+        sb.append(DatabaseHelper.createWhereClause(recipeName, new String[] { selIngredients[0] } ));
+
+        for (int i = 1; i < selIngredients.length; ++i) {
+            sb.append(" UNION ALL ");
+            sb.append(QUERY_LIKE_STUB);
+            sb.append(DatabaseHelper.createWhereClause(recipeName, new String[]{selIngredients[i]}));
+        }
+
+        sb.append(") AS r INNER JOIN ");
+        sb.append(DatabaseHelper.recipesTable);
+        sb.append(" ON r._id = ");
+        sb.append(DatabaseHelper.recipesTable);
+        sb.append("._id GROUP BY r._id ORDER BY CountMatches DESC, LENGTH(");
+        sb.append(DatabaseHelper.recIngredients);
+        sb.append(")");
+
+        SQLiteDatabase db = database.getWritableDatabase();
+
+        db.execSQL("DROP VIEW IF EXISTS " + DatabaseHelper.RESULTS_VIEW);
+        db.execSQL(sb.toString());
+        db.close();
+        displayRows = displayRows + DISPLAY_ROWS_INCREASE;
+        cursor = database.getResultsViewCursor(displayRows);
+        results = cursor.moveToFirst();
     }
 
 
@@ -150,10 +194,6 @@ public class SearchSimple extends ListActivity {
             builder.setMessage("No recipes found with all the selected ingredients. Do you want to search for recipes that use only some of your ingredients?")
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            Intent intent = new Intent(getActivity(), SearchResults.class);
-                            intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
-                            intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
-                            startActivity(intent);
                         }
                     })
                     .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -169,12 +209,13 @@ public class SearchSimple extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int pos, long id) {
         super.onListItemClick(l, v, pos, id);
-        DatabaseHelper db = new DatabaseHelper(this);
-        String[] recipe = db.getRecipe(id);
-        db.close();
+        String[] recipe = new String[3];
+        cursor.moveToPosition(pos);
+        recipe[0]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recName));
+        recipe[1]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recIngredients));
+        recipe[2]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recURL));
         Intent intent = new Intent(this, RecipeViewer.class);
         intent.putExtra("com.lcneves.cookme.RECIPE", recipe);
-        intent.putExtra("com.lcneves.cookme.ACTIVITY", "simple");
         startActivity(intent);
     }
 
@@ -195,14 +236,15 @@ public class SearchSimple extends ListActivity {
     public boolean onContextItemSelected(MenuItem item) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
         int menuItemIndex = item.getItemId();
-        DatabaseHelper db = new DatabaseHelper(this);
-        String[] recipe = db.getRecipe(info.id);
-        db.close();
+        String[] recipe = new String[3];
+        cursor.moveToPosition(info.position);
+        recipe[0]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recName));
+        recipe[1]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recIngredients));
+        recipe[2]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recURL));
         switch (menuItemIndex) {
             case 0:
                 Intent intent = new Intent(this, RecipeViewer.class);
                 intent.putExtra("com.lcneves.cookme.RECIPE", recipe);
-                intent.putExtra("com.lcneves.cookme.ACTIVITY", "simple");
                 startActivity(intent);
                 break;
             case 1:
@@ -235,11 +277,43 @@ public class SearchSimple extends ListActivity {
     }
 
     public void clickShowMore(View v) {
-        Intent intent = new Intent(SearchSimple.this, SearchResults.class);
-        intent.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
-        intent.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
-        intent.putExtra("com.lcneves.cookme.ROW", cursorCount);
-        startActivity(intent);
+        displayRows = displayRows + DISPLAY_ROWS_INCREASE;
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setMessage("Fetching more recipes...");
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progress_dialog_anim));
+        mProgressDialog.setCancelable(false);
+
+        final ShowMore showMore = new ShowMore(this);
+        showMore.execute();
+    }
+
+    private class ShowMore extends AsyncTask<String, Integer, String> {
+
+        private Context context;
+
+        public ShowMore(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected String doInBackground(final String... args) {
+            cursor = database.getResultsViewCursor(displayRows);
+            cursor.moveToFirst();
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            adapter.changeCursor(cursor);
+            adapter.notifyDataSetChanged();
+            mProgressDialog.dismiss();
+        }
     }
 
     private class ComplexCursorAdapter extends SimpleCursorAdapter {

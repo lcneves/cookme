@@ -24,7 +24,6 @@ public class RecipeViewer extends Activity {
     String[] recipe;
     String name;
     String url;
-    String previousActivity;
     private ShareActionProvider mShareActionProvider;
 
     @Override
@@ -36,7 +35,6 @@ public class RecipeViewer extends Activity {
         recipe = intent.getStringArrayExtra("com.lcneves.cookme.RECIPE");
         name = recipe[0];
         url = recipe[2];
-        previousActivity = intent.getStringExtra("com.lcneves.cookme.ACTIVITY");
         webview = (WebView) findViewById(R.id.webView);
 
         setTitle(name);
@@ -91,17 +89,9 @@ public class RecipeViewer extends Activity {
             return true;
         }*/
         if(id == android.R.id.home) {
-            Log.d("com.lcneves.cookme.RecipeViewer", "previousActivity = "+previousActivity);
-            if(previousActivity.equals("display")) {
-                Intent intent = new Intent(this, SearchResults.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-            }
-            if(previousActivity.equals("simple")) {
-                Intent intent = new Intent(this, SearchSimple.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-            }
+            Intent intent = new Intent(this, SearchSimple.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);

@@ -28,19 +28,10 @@
             android:label="@string/title_activity_jsonhelper" >
         </activity>
         <activity
-            android:name=".SearchResults"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:label="@string/title_activity_search_results"
-            android:parentActivityName=".MainActivity" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.lcneves.cookme.MainActivity" />
-        </activity>
-        <activity
             android:name=".RecipeViewer"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:label="@string/title_activity_recipe_viewer"
-            android:parentActivityName=".SearchResults" >
+            android:parentActivityName=".SearchSimple" >
         </activity>
         <activity
             android:name=".SearchSimple"
