@@ -1,14 +1,11 @@
 package com.lcneves.cookme;
 
-import android.app.Activity;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteStatement;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -31,10 +28,6 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Locale;
 
 
@@ -44,24 +37,14 @@ public class SearchResults extends ListActivity {
     ProgressDialog mProgressDialog;
     String[] selIngredients;
     String recipeName;
-    String selIngredientsDummy = null;
     int rowCount;
-    final String resMismatches = DatabaseHelper.resMismatches;
-    final String recipesTable = DatabaseHelper.recipesTable;
-    final String recID = DatabaseHelper.recID;
-    final String recName = DatabaseHelper.recName;
-    final String recIngredients = DatabaseHelper.recIngredients;
-    final String recIngredientsLower = DatabaseHelper.recIngredientsLower;
-    final String recURL = DatabaseHelper.recURL;
-    final String recLength = DatabaseHelper.recLength;
-    final String recSize = "size";
-    String[] selIngredientsLower;
     Cursor cursor;
     ComplexCursorAdapter adapter;
     ListView lv;
     DatabaseHelper database;
     int displayRows;
     final int DISPLAY_ROWS_INCREASE = 20;
+    boolean results;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,9 +54,7 @@ public class SearchResults extends ListActivity {
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
         rowCount = intent.getIntExtra("com.lcneves.cookme.ROW", 0);
-        selIngredientsLower = new String[selIngredients.length];
-        for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
-        Log.d("com.lcneves.cookme.SearchResults", "selIngredients= "+selIngredients+", recipeName= "+recipeName);
+        results = false;
 
         searchResults();
     }
@@ -106,12 +87,11 @@ public class SearchResults extends ListActivity {
         mProgressDialog.setCancelable(false);
 
         final SearchTask searchTask = new SearchTask(SearchResults.this);
-        searchTask.execute(selIngredientsDummy);
+        searchTask.execute();
     }
 
     private class SearchTask extends AsyncTask<String, Integer, String> {
 
-        private String progressMessage;
         private Context context;
         private PowerManager.WakeLock mWakeLock;
 
@@ -120,57 +100,41 @@ public class SearchResults extends ListActivity {
         }
 
         @Override
-        protected String doInBackground(final String... selIngredientsDummy) {
-            String nameLike = "";
-            if (recipeName != null) nameLike = " AND "+recName+" LIKE '%"+recipeName+"%\'";
+        protected String doInBackground(final String... args) {
             StringBuilder sb = new StringBuilder("CREATE VIEW ");
             sb.append(DatabaseHelper.RESULTS_VIEW);
-            sb.append(" AS SELECT Recipes.*,Count(r._id) as CountMatches FROM (");
+            sb.append(" AS SELECT ");
+            sb.append(DatabaseHelper.recipesTable);
+            sb.append(".*,Count(r._id) as CountMatches FROM (");
 
-            final String QUERY_LIKE = "SELECT _id FROM Recipes WHERE Ingredients LIKE '%%%s%%'%s";
-
-            sb.append(String.format(QUERY_LIKE, selIngredients[0], nameLike));
+            final String QUERY_LIKE_STUB = "SELECT " + DatabaseHelper.recID + " FROM " + DatabaseHelper.recipesTable + " WHERE ";
+            sb.append(QUERY_LIKE_STUB);
+            sb.append(DatabaseHelper.createWhereClause(recipeName, new String[] { selIngredients[0] } ));
 
             for (int i = 1; i < selIngredients.length; ++i) {
                 sb.append(" UNION ALL ");
-                sb.append(String.format(QUERY_LIKE, selIngredients[i], nameLike));
+                sb.append(QUERY_LIKE_STUB);
+                sb.append(DatabaseHelper.createWhereClause(recipeName, new String[]{selIngredients[i]}));
             }
 
-            sb.append(") AS r INNER JOIN Recipes ON r._id = Recipes._id GROUP BY r._id");
-            sb.append(" ORDER BY CountMatches DESC, LENGTH(Ingredients)");
+            sb.append(") AS r INNER JOIN ");
+            sb.append(DatabaseHelper.recipesTable);
+            sb.append(" ON r._id = ");
+            sb.append(DatabaseHelper.recipesTable);
+            sb.append("._id GROUP BY r._id ORDER BY CountMatches DESC, LENGTH(");
+            sb.append(DatabaseHelper.recIngredients);
+            sb.append(")");
 
             database = new DatabaseHelper(getApplicationContext());
             SQLiteDatabase db = database.getWritableDatabase();
 
-            long startTime = System.nanoTime();
             db.execSQL("DROP VIEW IF EXISTS " + DatabaseHelper.RESULTS_VIEW);
-            Log.d("com.lcneves.cookme.SearchResults", "Dropping took "+((System.nanoTime()-startTime)/1000000));
-            startTime = System.nanoTime();
             db.execSQL(sb.toString());
-            Log.d("com.lcneves.cookme.SearchResults", "Executing SQL took "+((System.nanoTime()-startTime)/1000000));
             db.close();
             displayRows = rowCount + DISPLAY_ROWS_INCREASE;
-            Log.d("com.lcneves.cookme.SearchResults", "About to get the cursor...");
             cursor = database.getResultsViewCursor(displayRows);
-            Log.d("com.lcneves.cookme.SearchResults", "Got the cursor! It says: "+cursor.toString());
-            if(!cursor.moveToFirst()) {
-                mWakeLock.release();
-                mProgressDialog.dismiss();
-                Toast toast = Toast.makeText(SearchResults.this, "No recipes found!", Toast.LENGTH_LONG);
-                toast.show();
-                Intent intent2 = new Intent(SearchResults.this, MainActivity.class);
-                startActivity(intent2);
-            }
-            adapter = new ComplexCursorAdapter(
-                    activity,
-                    R.layout.list_item_simple,
-                    cursor,
-                    new String[] {DatabaseHelper.recName, DatabaseHelper.recIngredients,
-                            DatabaseHelper.recURL},
-                    new int[] { R.id.name, R.id.ingredients, R.id.url},
-                    0
-            );
-            Log.d("com.lcneves.cookme.SearchResults", "Instantiated the adapter...");
+            results = cursor.moveToFirst();
+
             return null;
         }
 
@@ -199,13 +163,22 @@ public class SearchResults extends ListActivity {
         @Override
         protected void onPostExecute(String result) {
             mWakeLock.release();
+            if(!results) {
+                Toast.makeText(SearchResults.this, "No recipes found!", Toast.LENGTH_LONG).show();
+                startActivity(new Intent(SearchResults.this, MainActivity.class));
+            }
+            adapter = new ComplexCursorAdapter(
+                    activity,
+                    R.layout.list_item_simple,
+                    cursor,
+                    new String[] {DatabaseHelper.recName, DatabaseHelper.recIngredients,
+                            DatabaseHelper.recURL},
+                    new int[] { R.id.name, R.id.ingredients, R.id.url},
+                    0
+            );
             setListAdapter(adapter);
-            Log.d("com.lcneves.cookme.SearchResults", "Set list adapter...");
             lv = getListView();
-            Log.d("com.lcneves.cookme.SearchResults", "Got list view...");
             registerForContextMenu(lv);
-            Log.d("com.lcneves.cookme.SearchResults", "rowCount = "+ rowCount);
-
             View footerView = ((LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
             lv.addFooterView(footerView);
             lv.setSelection(rowCount);
@@ -370,8 +343,8 @@ public class SearchResults extends ListActivity {
             TextView ingredients = (TextView) view.findViewById(R.id.ingredients);
             Spannable ingredientsSpan = new SpannableString(ingredients.getText());
             String ingredientsSpanString = ingredientsSpan.toString().toLowerCase(Locale.ENGLISH);
-            for(String s : selIngredientsLower) {
-                for(int j = -1; (j = ingredientsSpanString.indexOf(s, j + 1)) != -1;) {
+            for(String s : selIngredients) {
+                for(int j = -1; (j = ingredientsSpanString.indexOf(s.toLowerCase(Locale.ENGLISH), j + 1)) != -1;) {
                     ingredientsSpan.setSpan(new ForegroundColorSpan(Color.argb(208, 0, 127, 0)), j, j + s.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }

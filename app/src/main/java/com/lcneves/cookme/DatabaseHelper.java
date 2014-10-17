@@ -4,11 +4,11 @@ package com.lcneves.cookme;
  * Created by lucas on 10.09.14.
  */
 
-        import android.content.ContentValues;
-        import android.content.Context;
-        import android.database.Cursor;
-        import android.database.sqlite.SQLiteDatabase;
-        import android.database.sqlite.SQLiteOpenHelper;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -17,11 +17,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     static final String recID="_id";
     static final String recName="Name";
     static final String recIngredients="Ingredients";
-    static final String recIngredientsLower="IngredientsLower";
     static final String recURL="URL";
-    static final String recLength="Length";
-
-    static final String resMismatches="Mismatches";
 
     static final String ingredientsTable="IngredientsTable";
     static final String ingID="_id";
@@ -31,12 +27,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     static final String shoID="_id";
     static final String shoName="ShoName";
 
-    static final String sortTable="SortTable";
-    static final String resultsTable = "resultsTable";
     static final String RESULTS_VIEW = "ResultsView";
-    static final String sortID="ID";
-    static final String sortOrder="ID_Order";
 
+    public static String createWhereClause(String name, String[] ingredients) {
+        StringBuilder sb = new StringBuilder(recName + " LIKE '%" + name + "%'");
+
+        if (ingredients.length > 0) {
+            sb.append(" AND (" + recIngredients + " LIKE '%" + ingredients[0] + "%'");
+            for (int i = 1; i < ingredients.length; ++i) sb.append(" AND " + recIngredients + " LIKE '%" + ingredients[i] + "%'");
+            sb.append(")");
+        }
+
+        return sb.toString();
+    }
+
+    public static String createSortClause(String[] selIngredients) {
+        if(selIngredients.length == 0) return null;
+        return "LENGTH("+recIngredients+")";
+    }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -47,7 +55,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public DatabaseHelper(Context context) {
-        super(context, dbName, null,33);
+        super(context, dbName, null, 33);
     }
 
     @Override
@@ -57,39 +65,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public void recreateDatabase() {
         SQLiteDatabase db=this.getWritableDatabase();
-        db.execSQL("DROP TABLE IF EXISTS "+recipesTable);
+        db.execSQL("DROP TABLE IF EXISTS " + recipesTable);
         db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recURL+" TEXT)");
-        db.close();
-    }
-
-    public void recreateResultsTable() {
-        SQLiteDatabase db=this.getWritableDatabase();
-        db.execSQL("DROP TABLE IF EXISTS "+resultsTable);
-        db.execSQL("CREATE TABLE "+resultsTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recURL+" TEXT, "+recLength+" INTEGER, "+resMismatches+" INTEGER)");
-        db.close();
-    }
-
-    public void createResultsView(String[] sortedIDs) {
-        SQLiteDatabase db=this.getWritableDatabase();
-        db.execSQL("DROP TABLE IF EXISTS "+sortTable);
-        db.execSQL("DROP TABLE IF EXISTS "+ resultsTable);
-        db.execSQL("CREATE TABLE "+sortTable+" ("+sortOrder+" INTEGER PRIMARY KEY, "+sortID+" INTEGER)");
-        db.beginTransaction();
-        for(int i = 0; i < sortedIDs.length; i++) {
-            ContentValues cv=new ContentValues();
-            cv.put(sortOrder, i);
-            cv.put(sortID, sortedIDs[i]);
-            db.insertOrThrow(sortTable, null, cv);
-        }
-        db.setTransactionSuccessful();
-        db.endTransaction();
-        StringBuilder IDBuilder = new StringBuilder("("+sortedIDs[0]);
-        for(int i = 1; i < sortedIDs.length; i++) {
-            IDBuilder.append(",");
-            IDBuilder.append(sortedIDs[i]);
-        }
-        IDBuilder.append(")");
-        db.execSQL("CREATE TABLE "+ resultsTable +" AS SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+recipesTable+" JOIN "+sortTable+" ON "+recipesTable+"."+recID+"="+sortTable+"."+sortID+" WHERE "+recID+" IN "+IDBuilder.toString()+" ORDER BY "+sortOrder);
         db.close();
     }
 

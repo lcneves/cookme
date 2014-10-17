@@ -4,16 +4,21 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.ContentValues;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.net.ConnectivityManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.provider.ContactsContract;
+import android.os.PowerManager;
 import android.util.JsonReader;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -32,27 +37,14 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.Locale;
 import java.util.zip.GZIPInputStream;
-
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.PowerManager;
-import android.widget.Toast;
 
 public class JSONHelper extends Activity {
 
-    final String recID = DatabaseHelper.recID;
     final String recName = DatabaseHelper.recName;
     final String recIngredients = DatabaseHelper.recIngredients;
-    final String recIngredientsLower = DatabaseHelper.recIngredientsLower;
     final String recURL = DatabaseHelper.recURL;
-    final String recLength = DatabaseHelper.recLength;
     final String recipesTable = DatabaseHelper.recipesTable;
-    final String resMismatches = DatabaseHelper.resMismatches;
     static final String fileNameOld = "recipeitems-latest.json";
     static final String fileNameNew = "recipeitems-edited.json";
     static final String fileNameGz = "recipeitems-latest.json.gz";

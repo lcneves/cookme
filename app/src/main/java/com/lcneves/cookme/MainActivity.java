@@ -32,6 +32,7 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -239,27 +240,18 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
 
                 public void onClick(View v) {
-                    boolean ingredients = false;
-                    boolean name = false;
+                    String name = input.getText().toString().trim();
+                    if (name.isEmpty() && checkedList.isEmpty()) {
+                        Toast.makeText(context, "Please fill in recipe name or choose ingredients", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
                     Intent intent = new Intent(context, SearchSimple.class);
                     imm.hideSoftInputFromWindow(input.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
-                    if(!checkedList.isEmpty()) {
-                        ingredients = true;
-                        String[] arrayList = checkedList.toArray(new String[(checkedList.size())]);
-                        intent.putExtra("com.lcneves.cookme.INGREDIENTS", arrayList);
-                    }
-                    if (!input.getText().toString().trim().isEmpty()) {
-                        name = true;
-                        intent.putExtra("com.lcneves.cookme.RECIPENAME", input.getText().toString().trim());
-                    }
-                    if (ingredients || name) {
-                        startActivity(intent);
-                        dismiss();
-                    }
-                    else {
-                        Toast toast = Toast.makeText(context, "Please fill in recipe name or choose ingredients", Toast.LENGTH_LONG);
-                        toast.show();
-                    }
+                    intent.putExtra("com.lcneves.cookme.RECIPENAME", name);
+                    intent.putExtra("com.lcneves.cookme.INGREDIENTS", checkedList.toArray(new String[(checkedList.size())]));
+                    startActivity(intent);
+                    dismiss();
                 }
             });
 

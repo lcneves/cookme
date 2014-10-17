@@ -1,6 +1,5 @@
 package com.lcneves.cookme;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -19,7 +18,6 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -29,16 +27,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Locale;
 
 
@@ -48,15 +41,7 @@ public class SearchSimple extends ListActivity {
     ListView lv;
     ProgressDialog mProgressDialog;
     static String[] selIngredients;
-    String[] selIngredientsLower;
     static String recipeName;
-    String selIngredientsDummy = null;
-    static final String recipesTable="Recipes";
-    static final String recID="_id";
-    static final String recName="Name";
-    static final String recIngredients="Ingredients";
-    static final String recURL="URL";
-    static final String recLength="Length";
     Cursor cursor;
     int cursorCount;
 
@@ -78,7 +63,7 @@ public class SearchSimple extends ListActivity {
         mProgressDialog.setCancelable(false);
 
         final SearchTask searchTask = new SearchTask(SearchSimple.this);
-        searchTask.execute(selIngredientsDummy);
+        searchTask.execute();
     }
 
     private class SearchTask extends AsyncTask<String, Integer, String> {
@@ -91,33 +76,16 @@ public class SearchSimple extends ListActivity {
         }
 
         @Override
-        protected String doInBackground(final String... selIngredientsDummy) {
+        protected String doInBackground(final String... args) {
             long startTime = System.nanoTime();
             DatabaseHelper database = new DatabaseHelper(getApplicationContext());
             SQLiteDatabase db = database.getWritableDatabase();
-            String whereCondition = "";
 
-            if (recipeName != null) {
-                whereCondition = recName+" LIKE \'%" + recipeName + "%\'";
-                if (selIngredients != null) {
-                    whereCondition = whereCondition + " AND ";
-                }
-            }
-            if (selIngredients != null) {
-                whereCondition = whereCondition + recIngredients+" LIKE \'%" + selIngredients[0] + "%\'";
-                for (int i = 1; i < selIngredients.length; i++) {
-                    whereCondition = whereCondition + " AND " + recIngredients + " LIKE \'%" + selIngredients[i] + "%\'";
-                }
-            }
-            Log.d("com.lcneves.cookme.SearchSimple", "whereCondition is: " + whereCondition);
-            if (selIngredients != null) {
-                cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, "LENGTH("+recIngredients+")");
-            } else {
-                cursor = db.query(recipesTable, new String[] {recID, recName, recIngredients, recURL}, whereCondition, null, null, null, null);
-            }
-            Log.d("com.lcneves.cookme.SearchResults", "Simple search took " + (((System.nanoTime() - startTime)) / 1000000)+" ms");
-            selIngredientsLower = new String[selIngredients.length];
-            for (int i = 0; i < selIngredients.length; ++i) selIngredientsLower[i] = selIngredients[i].toLowerCase(Locale.ENGLISH);
+            cursor = db.query(DatabaseHelper.recipesTable,
+                    new String[] {DatabaseHelper.recID, DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL},
+                    DatabaseHelper.createWhereClause(recipeName, selIngredients), null, null, null, DatabaseHelper.createSortClause(selIngredients));
+
+            Log.d("com.lcneves.cookme.SearchResults", "Simple search took " + (((System.nanoTime() - startTime)) / 1e6)+" ms");
             cursor.moveToFirst();
             return null;
         }
@@ -142,51 +110,33 @@ public class SearchSimple extends ListActivity {
                 ComplexCursorAdapter adapter = new ComplexCursorAdapter(activity,
                         R.layout.list_item_simple,
                         cursor,
-                        new String[]{recName, recIngredients, recURL},
+                        new String[]{DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL},
                         new int[]{R.id.name, R.id.ingredients, R.id.url},
                         0);
                 setListAdapter(adapter);
                 lv = getListView();
                 registerForContextMenu(lv);
-                if(selIngredients != null) {
-                    if(selIngredients.length > 2) {
-                        View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
-                        lv.addFooterView(footerView);
-                    }
+                if(selIngredients.length > 2) {
+                    View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
+                    lv.addFooterView(footerView);
                 }
-            } else {
-                if(selIngredients != null) {
-                    if(selIngredients.length > 2) {
-                        SearchMoreDialogFragment searchMoreDialog = new SearchMoreDialogFragment();
-                        searchMoreDialog.show(getFragmentManager(), "tag");
-                    } else {
-                        Toast toast;
-                        if (recipeName != null) {
-                            if(selIngredients.length == 1) {
-                                toast = Toast.makeText(SearchSimple.this, "No recipes for \""+recipeName+"\" found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
-                            } else {
-                                toast = Toast.makeText(SearchSimple.this, "No recipes for \""+recipeName+"\" found using \""+selIngredients[0]+"\" and \""+selIngredients[1]+"\"", Toast.LENGTH_LONG);
-                            }
-                            toast.show();
-                            Intent intent = new Intent(SearchSimple.this, MainActivity.class);
-                            startActivity(intent);
-                        } else {
-                            if(selIngredients.length == 1) {
-                                toast = Toast.makeText(SearchSimple.this, "No recipes found using \""+selIngredients[0]+"\"", Toast.LENGTH_LONG);
-                            } else {
-                                toast = Toast.makeText(SearchSimple.this, "No recipes found using \""+selIngredients[0]+"\" and \""+selIngredients[1]+"\"", Toast.LENGTH_LONG);
-                            }
-                            toast.show();
-                            Intent intent = new Intent(SearchSimple.this, MainActivity.class);
-                            startActivity(intent);
-                        }
-                    }
-                } else {
-                    Toast toast = Toast.makeText(SearchSimple.this, "No recipes found with the name \""+recipeName+"\"", Toast.LENGTH_LONG);
-                    toast.show();
-                    Intent intent = new Intent(SearchSimple.this, MainActivity.class);
-                    startActivity(intent);
-                }
+            } else switch (selIngredients.length) {
+                case 0:
+                    Toast.makeText(SearchSimple.this, "No recipes found with the name \"" + recipeName + "\"", Toast.LENGTH_LONG).show();
+                    startActivity(new Intent(SearchSimple.this, MainActivity.class));
+                    break;
+                case 1:
+                case 2:
+                    StringBuilder sb = new StringBuilder("No recipes");
+                    if (!recipeName.isEmpty()) sb.append(" for \"" + recipeName + "\"");
+                    sb.append(" found using \"" + selIngredients[0] + "\"");
+                    if (selIngredients.length == 2) sb.append(" and \"" + selIngredients[1] + "\"");
+
+                    Toast.makeText(SearchSimple.this, sb.toString(), Toast.LENGTH_LONG).show();
+                    startActivity(new Intent(SearchSimple.this, MainActivity.class));
+                    break;
+                default:
+                    new SearchMoreDialogFragment().show(getFragmentManager(), "tag");
             }
             mProgressDialog.dismiss();
         }
@@ -306,8 +256,8 @@ public class SearchSimple extends ListActivity {
             TextView ingredients = (TextView) view.findViewById(R.id.ingredients);
             Spannable ingredientsSpan = new SpannableString(ingredients.getText());
             String ingredientsSpanString = ingredientsSpan.toString().toLowerCase(Locale.ENGLISH);
-            for(String s : selIngredientsLower) {
-                for(int j = -1; (j = ingredientsSpanString.indexOf(s, j + 1)) != -1;) {
+            for(String s : selIngredients) {
+                for(int j = -1; (j = ingredientsSpanString.indexOf(s.toLowerCase(Locale.ENGLISH), j + 1)) != -1;) {
                     ingredientsSpan.setSpan(new ForegroundColorSpan(Color.argb(208, 0, 127, 0)), j, j + s.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }
