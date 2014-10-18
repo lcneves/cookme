@@ -41,27 +41,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return sb.toString();
     }
 
-    public static String createSortClause(String[] selIngredients) {
-        if(selIngredients.length == 0) return null;
-        return "LENGTH("+recIngredients+")";
-    }
-
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-     //   db.execSQL("DROP TABLE IF EXISTS "+recipesTable);
-     //   db.execSQL("DROP TABLE IF EXISTS "+resultsTable);
-     //   db.execSQL("CREATE TABLE "+recipesTable+" ("+recID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+recName+" TEXT, "+recIngredients+" TEXT, "+recURL+" TEXT)");
-     //   db.execSQL("CREATE TABLE "+resultsTable+" ("+resID+" INTEGER PRIMARY KEY, "+resName+" TEXT, "+resIngredients+" TEXT, "+resURL+" TEXT, "+resMatches+" TEXT, "+resMismatches+" TEXT, "+resMatchCount+" INTEGER, "+resMismatchCount+" INTEGER)");
-    }
-
     public DatabaseHelper(Context context) {
         super(context, dbName, null, 33);
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase arg0, int arg1, int arg2) {
+    public void onCreate(SQLiteDatabase db) {}
 
-    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase arg0, int arg1, int arg2) {}
 
     public void recreateDatabase() {
         SQLiteDatabase db=this.getWritableDatabase();
@@ -86,20 +75,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE IF NOT EXISTS "+ingredientsTable+" ("+ingID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+ingName+" TEXT)");
         db.execSQL("CREATE TABLE IF NOT EXISTS "+shoppingTable+" ("+shoID+" INTEGER PRIMARY KEY AUTOINCREMENT, "+shoName+" TEXT)");
         db.close();
-    }
-
-    public String[] getRecipe(long id) {
-        String[] recipe = new String[3];
-        SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.query(recipesTable, new String[]{recName, recIngredients, recURL}, recID+" = "+id, null, null, null, null);
-        if (cursor.moveToFirst()) {
-            recipe[0] = cursor.getString(cursor.getColumnIndex(recName));
-            recipe[1] = cursor.getString(cursor.getColumnIndex(recIngredients));
-            recipe[2] = cursor.getString(cursor.getColumnIndex(recURL));
-        }
-        cursor.close();
-        db.close();
-        return recipe;
     }
 
     public Cursor displayIngredients() {

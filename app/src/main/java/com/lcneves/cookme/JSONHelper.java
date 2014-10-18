@@ -119,7 +119,6 @@ public class JSONHelper extends Activity {
         mProgressDialog = new ProgressDialog(JSONHelper.this);
         mProgressDialog.setMessage("Decompressing...");
         mProgressDialog.setIndeterminate(true);
-        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
         mProgressDialog.setCancelable(false);
 
         final UnzipTask unzipTask = new UnzipTask(JSONHelper.this);
@@ -278,14 +277,8 @@ public class JSONHelper extends Activity {
                 is = new FileInputStream(fileInOut[0]);
                 zis = new GZIPInputStream(new BufferedInputStream(is));
                 bos = new BufferedOutputStream(new FileOutputStream(fileInOut[1]));
-                long total = 0;
-                long fileLength = fileInOut[0].length();
 
-                while ((length = zis.read(buffer, 0, sChunk)) != -1) {
-                    total += length;
-                    publishProgress((int) (total * 100 / fileLength));
-                    bos.write(buffer, 0, length);
-                }
+                while ((length = zis.read(buffer, 0, sChunk)) != -1) bos.write(buffer, 0, length);
             } catch (FileNotFoundException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -315,15 +308,6 @@ public class JSONHelper extends Activity {
                     getClass().getName());
             mWakeLock.acquire();
             mProgressDialog.show();
-        }
-
-        @Override
-        protected void onProgressUpdate(Integer... progress) {
-            super.onProgressUpdate(progress);
-            // if we get here, length is known, now set indeterminate to false
-            mProgressDialog.setIndeterminate(false);
-            mProgressDialog.setMax(100);
-            mProgressDialog.setProgress(progress[0]);
         }
 
         @Override
@@ -432,7 +416,8 @@ public class JSONHelper extends Activity {
             final String URL = "url";
             int lineProgress = 0;
             long oldTime = System.nanoTime();
-            String comma = ",";
+            final String comma = ",";
+            final short MIN_INGREDIENTS_LENGTH = 5;
             SQLiteStatement st = db.compileStatement("INSERT INTO "+recipesTable+" ("+recName+comma+recIngredients+comma+recURL+") VALUES (?,?,?);");
 
             try {
@@ -449,6 +434,14 @@ public class JSONHelper extends Activity {
                             jsonName = jsonReader.nextString().replace("&amp;", "&");
                         } else if (name.equals(INGREDIENTS)) {
                             jsonIngredients = jsonReader.nextString().replace("&amp;", "&").trim();
+                            if(jsonIngredients.length() < MIN_INGREDIENTS_LENGTH) jsonIngredients = null;
+                            else {
+                                int lineBreak = jsonIngredients.indexOf("\n");
+                                if(lineBreak == -1) lineBreak = jsonIngredients.length();
+                                if(jsonIngredients.substring(0,(lineBreak/2)).equals
+                                        (jsonIngredients.substring((lineBreak/2)+1, lineBreak)))
+                                    jsonIngredients = null;
+                            }
                         } else if (name.equals(URL)) {
                             jsonUrl = jsonReader.nextString();
                         } else {

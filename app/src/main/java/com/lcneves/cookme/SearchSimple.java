@@ -91,7 +91,9 @@ public class SearchSimple extends ListActivity {
 
             cursor = db.query(DatabaseHelper.recipesTable,
                     new String[] {DatabaseHelper.recID, DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL},
-                    DatabaseHelper.createWhereClause(recipeName, selIngredients), null, null, null, DatabaseHelper.createSortClause(selIngredients));
+                    DatabaseHelper.createWhereClause(recipeName, selIngredients), null, null, null,
+                    "LENGTH("+DatabaseHelper.recIngredients+")");
+//            selIngredients.length > 0 ? "LENGTH("+DatabaseHelper.recIngredients+")" : null
 
             if(!(results = cursor.moveToFirst()) && selIngredients.length > 0) searchComplex();
             return null;
