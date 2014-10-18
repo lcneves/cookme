@@ -15,5 +15,8 @@
     <string name="action_composite_search"><![CDATA[by name & ingredients]]></string>
     <string name="title_activity_search_simple">Search results</string>
     <string name="action_about">About...</string>
+    <string name="app_label">Cook me!</string>
+    <string name="search_hint">Filter results</string>
+    <string name="action_filter">Filter results...</string>
 
 </resources>

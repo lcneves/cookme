@@ -26,8 +26,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,19 +49,26 @@ public class SearchSimple extends ListActivity {
     final int DISPLAY_ROWS_INCREASE = 20;
     boolean results;
     boolean complex;
+    boolean filter;
     DatabaseHelper database = new DatabaseHelper(this);
     ComplexCursorAdapter adapter;
+    static String query;
+    static boolean newQuery;
+    View footerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_simple);
+        getActionBar().setDisplayShowTitleEnabled(false);
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
         displayRows = 0;
         results = false;
         complex = false;
+        filter = false;
+        newQuery = false;
         searchResults();
     }
 
@@ -126,7 +135,7 @@ public class SearchSimple extends ListActivity {
                 lv = getListView();
                 registerForContextMenu(lv);
                 if(complex || selIngredients.length > 2) {
-                    View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
+                    footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
                     lv.addFooterView(footerView);
                 }
             } else {
@@ -188,26 +197,6 @@ public class SearchSimple extends ListActivity {
         results = cursor.moveToFirst();
     }
 
-
-    public static class SearchMoreDialogFragment extends DialogFragment {
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            builder.setMessage("No recipes found with all the selected ingredients. Do you want to search for recipes that use only some of your ingredients?")
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                        }
-                    })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            Intent intent = new Intent(getActivity(), MainActivity.class);
-                            startActivity(intent);
-                        }
-                    });
-            return builder.create();
-        }
-    }
-
     @Override
     protected void onListItemClick(ListView l, View v, int pos, long id) {
         super.onListItemClick(l, v, pos, id);
@@ -224,7 +213,6 @@ public class SearchSimple extends ListActivity {
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
                                     ContextMenu.ContextMenuInfo menuInfo) {
-//        menu.setHeaderTitle(Countries[info.position]);
         String[] menuItems = new String[3];
         menuItems[0] = "Open recipe webpage";
         menuItems[1] = "Share recipe link";
@@ -286,8 +274,13 @@ public class SearchSimple extends ListActivity {
         mProgressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progress_dialog_anim));
         mProgressDialog.setCancelable(false);
 
-        final ShowMore showMore = new ShowMore(this);
-        showMore.execute();
+        if(filter) {
+            final FilterResults filterResults = new FilterResults(this);
+            filterResults.execute(query);
+        } else {
+            final ShowMore showMore = new ShowMore(this);
+            showMore.execute();
+        }
     }
 
     private class ShowMore extends AsyncTask<String, Integer, String> {
@@ -300,7 +293,8 @@ public class SearchSimple extends ListActivity {
 
         @Override
         protected String doInBackground(final String... args) {
-            cursor = database.getResultsViewCursor(displayRows);
+            if(filter) cursor = database.getFilterViewCursor(displayRows, SearchSimple.query);
+            else cursor = database.getResultsViewCursor(displayRows);
             cursor.moveToFirst();
             return null;
         }
@@ -314,6 +308,78 @@ public class SearchSimple extends ListActivity {
         protected void onPostExecute(String result) {
             adapter.changeCursor(cursor);
             adapter.notifyDataSetChanged();
+            mProgressDialog.dismiss();
+        }
+    }
+
+    public void filterResultsAction(String query) {
+        displayRows = newQuery ? DISPLAY_ROWS_INCREASE : displayRows + DISPLAY_ROWS_INCREASE;
+        mProgressDialog = new ProgressDialog(this);
+        mProgressDialog.setMessage("Filtering results for \""+query+"\"...");
+        mProgressDialog.setIndeterminate(true);
+        mProgressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progress_dialog_anim));
+        mProgressDialog.setCancelable(false);
+
+        final FilterResults filterResults = new FilterResults(this);
+        filterResults.execute(query);
+    }
+
+    private class FilterResults extends AsyncTask<String, Integer, String> {
+
+        private Context context;
+
+        public FilterResults(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        protected String doInBackground(final String... args) {
+            StringBuilder sb = new StringBuilder("CREATE VIEW ");
+            sb.append(DatabaseHelper.RESULTS_VIEW);
+            sb.append(" AS SELECT ");
+            sb.append(DatabaseHelper.recipesTable);
+            sb.append(".*,Count(r._id) as CountMatches FROM (");
+
+            final String QUERY_LIKE_STUB = "SELECT " + DatabaseHelper.recID + " FROM " + DatabaseHelper.recipesTable + " WHERE ";
+            sb.append(QUERY_LIKE_STUB);
+            sb.append(DatabaseHelper.createWhereClause(recipeName, new String[] {selIngredients[0]}, args[0]));
+
+            for (int i = 1; i < selIngredients.length; ++i) {
+                sb.append(" UNION ALL ");
+                sb.append(QUERY_LIKE_STUB);
+                sb.append(DatabaseHelper.createWhereClause(recipeName, new String[]{selIngredients[i]}, args[0]));
+            }
+
+            sb.append(") AS r INNER JOIN ");
+            sb.append(DatabaseHelper.recipesTable);
+            sb.append(" ON r._id = ");
+            sb.append(DatabaseHelper.recipesTable);
+            sb.append("._id GROUP BY r._id ORDER BY CountMatches DESC, LENGTH(");
+            sb.append(DatabaseHelper.recIngredients);
+            sb.append(")");
+
+            SQLiteDatabase db = database.getWritableDatabase();
+
+            db.execSQL("DROP VIEW IF EXISTS " + DatabaseHelper.RESULTS_VIEW);
+            db.execSQL(sb.toString());
+            db.close();
+            cursor = database.getResultsViewCursor(displayRows);
+            results = cursor.moveToFirst();
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            adapter.changeCursor(cursor);
+            adapter.notifyDataSetChanged();
+            if(newQuery) lv.setSelection(0);
+            newQuery = false;
+            filter = true;
             mProgressDialog.dismiss();
         }
     }
@@ -346,6 +412,25 @@ public class SearchSimple extends ListActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.search_simple, menu);
+        MenuItem item = menu.findItem(R.id.action_filter);
+        final SearchView filter = (SearchView)item.getActionView();
+        filter.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                SearchSimple.query = query.trim();
+                newQuery = true;
+                final InputMethodManager imm = (InputMethodManager) getBaseContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(filter.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                filterResultsAction(query.trim());
+                return true;
+            }
+        });
         return true;
     }
 

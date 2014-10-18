@@ -6,4 +6,11 @@
         android:orderInCategory="200"
         android:showAsAction="never"
         android:onClick="clickAboutMenuSimple"/>
+    <item
+        android:id="@+id/action_filter"
+        android:actionViewClass="android.widget.SearchView"
+        android:icon="@drawable/ic_action_search_light"
+        android:showAsAction="ifRoom"
+        android:title="@string/action_filter"
+        android:queryHint="@string/action_filter"/>
 </menu>

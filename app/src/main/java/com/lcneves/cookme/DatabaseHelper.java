@@ -41,6 +41,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return sb.toString();
     }
 
+    public static String createWhereClause(String name, String[] ingredients, String query) {
+        StringBuilder sb = new StringBuilder(recName + " LIKE '%" + name + "%'");
+
+        if (ingredients.length > 0) {
+            sb.append(" AND (" + recIngredients + " LIKE '%" + ingredients[0] + "%'");
+            for (int i = 1; i < ingredients.length; ++i) sb.append(" AND " + recIngredients + " LIKE '%" + ingredients[i] + "%'");
+            sb.append(")");
+        }
+        sb.append(" AND (" + recName + " LIKE '%" + query + "%' OR " + recIngredients + " LIKE '%" + query + "%')");
+
+        return sb.toString();
+    }
+
     public DatabaseHelper(Context context) {
         super(context, dbName, null, 33);
     }
@@ -62,6 +75,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor getResultsViewCursor(int displayRows) {
         SQLiteDatabase db=this.getReadableDatabase();
         return db.rawQuery("SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+RESULTS_VIEW+" LIMIT "+Integer.toString(displayRows), null);
+    }
+
+    public Cursor getFilterViewCursor(int displayRows, String query) {
+        SQLiteDatabase db=this.getReadableDatabase();
+        return db.rawQuery("SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+RESULTS_VIEW+" WHERE "+recName+" LIKE '%"+query+"%' OR "+recIngredients+" LIKE '%"+query+"%' LIMIT "+Integer.toString(displayRows), null);
     }
 
     public void dropRecipes() {
