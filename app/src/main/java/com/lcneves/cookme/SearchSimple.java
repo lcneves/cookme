@@ -50,6 +50,7 @@ public class SearchSimple extends ListActivity {
     boolean results;
     boolean complex;
     boolean filter;
+    boolean noMore;
     DatabaseHelper database = new DatabaseHelper(this);
     ComplexCursorAdapter adapter;
     static String query;
@@ -68,6 +69,7 @@ public class SearchSimple extends ListActivity {
         results = false;
         complex = false;
         filter = false;
+        noMore = false;
         newQuery = false;
         searchResults();
     }
@@ -95,16 +97,19 @@ public class SearchSimple extends ListActivity {
         @Override
         protected String doInBackground(final String... args) {
             long startTime = System.nanoTime();
+            displayRows = displayRows + DISPLAY_ROWS_INCREASE;
             DatabaseHelper database = new DatabaseHelper(getApplicationContext());
             SQLiteDatabase db = database.getWritableDatabase();
 
             cursor = db.query(DatabaseHelper.recipesTable,
                     new String[] {DatabaseHelper.recID, DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL},
                     DatabaseHelper.createWhereClause(recipeName, selIngredients), null, null, null,
-                    "LENGTH("+DatabaseHelper.recIngredients+")");
-//            selIngredients.length > 0 ? "LENGTH("+DatabaseHelper.recIngredients+")" : null
+                    "LENGTH("+DatabaseHelper.recIngredients+")", Integer.toString(displayRows));
 
-            if(!(results = cursor.moveToFirst()) && selIngredients.length > 0) searchComplex();
+            if(!(results = cursor.moveToFirst()) && selIngredients.length > 0) {
+                searchComplex();
+                results = cursor.moveToFirst();
+            }
             return null;
         }
 
@@ -123,8 +128,8 @@ public class SearchSimple extends ListActivity {
         @Override
         protected void onPostExecute(String result) {
             mWakeLock.release();
-            if(!complex) displayRows = cursor.getCount();
             if(results) {
+                if(cursor.getCount() < displayRows) noMore = true;
                 adapter = new ComplexCursorAdapter(activity,
                         R.layout.list_item_simple,
                         cursor,
@@ -134,10 +139,8 @@ public class SearchSimple extends ListActivity {
                 setListAdapter(adapter);
                 lv = getListView();
                 registerForContextMenu(lv);
-                if(complex || selIngredients.length > 2) {
-                    footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
-                    lv.addFooterView(footerView);
-                }
+                footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.simple_footer, null, false);
+                if(!(noMore && (complex || selIngredients.length == 0))) lv.addFooterView(footerView);
             } else {
                 switch (selIngredients.length) {
                     case 0:
@@ -163,6 +166,7 @@ public class SearchSimple extends ListActivity {
 
     private void searchComplex() {
         complex = true;
+        noMore = false;
         StringBuilder sb = new StringBuilder("CREATE VIEW ");
         sb.append(DatabaseHelper.RESULTS_VIEW);
         sb.append(" AS SELECT ");
@@ -192,9 +196,7 @@ public class SearchSimple extends ListActivity {
         db.execSQL("DROP VIEW IF EXISTS " + DatabaseHelper.RESULTS_VIEW);
         db.execSQL(sb.toString());
         db.close();
-        displayRows = displayRows + DISPLAY_ROWS_INCREASE;
         cursor = database.getResultsViewCursor(displayRows);
-        results = cursor.moveToFirst();
     }
 
     @Override
@@ -267,20 +269,19 @@ public class SearchSimple extends ListActivity {
     }
 
     public void clickShowMore(View v) {
-        displayRows = displayRows + DISPLAY_ROWS_INCREASE;
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("Fetching more recipes...");
         mProgressDialog.setIndeterminate(true);
         mProgressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progress_dialog_anim));
         mProgressDialog.setCancelable(false);
 
-        if(filter) {
+        /*if(filter) {
             final FilterResults filterResults = new FilterResults(this);
             filterResults.execute(query);
-        } else {
+        } else {*/
             final ShowMore showMore = new ShowMore(this);
             showMore.execute();
-        }
+
     }
 
     private class ShowMore extends AsyncTask<String, Integer, String> {
@@ -293,9 +294,20 @@ public class SearchSimple extends ListActivity {
 
         @Override
         protected String doInBackground(final String... args) {
-            if(filter) cursor = database.getFilterViewCursor(displayRows, SearchSimple.query);
-            else cursor = database.getResultsViewCursor(displayRows);
+
+            displayRows = displayRows + DISPLAY_ROWS_INCREASE;
+            if(filter && complex) cursor = database.getFilterViewCursor(displayRows, query);
+            else if(filter && noMore) {
+                searchComplex();
+                cursor = database.getFilterViewCursor(displayRows, query);
+            }
+            else if(filter) cursor = database.getFilterSimpleCursor(recipeName, selIngredients, displayRows, query);
+            else if(complex) cursor = database.getResultsViewCursor(displayRows);
+            else if(noMore) searchComplex();
+            else cursor = database.getSimpleViewCursor(recipeName, selIngredients, displayRows);
             cursor.moveToFirst();
+            if(cursor.getCount() < displayRows) noMore = true;
+
             return null;
         }
 
@@ -308,6 +320,7 @@ public class SearchSimple extends ListActivity {
         protected void onPostExecute(String result) {
             adapter.changeCursor(cursor);
             adapter.notifyDataSetChanged();
+            if(noMore && (complex || selIngredients.length == 0) && lv.getFooterViewsCount() > 0) lv.removeFooterView(footerView);
             mProgressDialog.dismiss();
         }
     }
@@ -334,7 +347,10 @@ public class SearchSimple extends ListActivity {
 
         @Override
         protected String doInBackground(final String... args) {
-            StringBuilder sb = new StringBuilder("CREATE VIEW ");
+            if(complex) cursor = database.getFilterViewCursor(displayRows, query);
+            else cursor = database.getFilterSimpleCursor(recipeName, selIngredients, displayRows, query);
+            results = cursor.moveToFirst();
+            /*StringBuilder sb = new StringBuilder("CREATE VIEW ");
             sb.append(DatabaseHelper.RESULTS_VIEW);
             sb.append(" AS SELECT ");
             sb.append(DatabaseHelper.recipesTable);
@@ -342,7 +358,8 @@ public class SearchSimple extends ListActivity {
 
             final String QUERY_LIKE_STUB = "SELECT " + DatabaseHelper.recID + " FROM " + DatabaseHelper.recipesTable + " WHERE ";
             sb.append(QUERY_LIKE_STUB);
-            sb.append(DatabaseHelper.createWhereClause(recipeName, new String[] {selIngredients[0]}, args[0]));
+            if(selIngredients.length > 0) sb.append(DatabaseHelper.createWhereClause(recipeName, new String[] {selIngredients[0]}, args[0]));
+            else sb.append(DatabaseHelper.createWhereClause(recipeName, selIngredients, args[0]));
 
             for (int i = 1; i < selIngredients.length; ++i) {
                 sb.append(" UNION ALL ");
@@ -364,7 +381,7 @@ public class SearchSimple extends ListActivity {
             db.execSQL(sb.toString());
             db.close();
             cursor = database.getResultsViewCursor(displayRows);
-            results = cursor.moveToFirst();
+            results = cursor.moveToFirst();*/
             return null;
         }
 
@@ -375,12 +392,16 @@ public class SearchSimple extends ListActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            adapter.changeCursor(cursor);
-            adapter.notifyDataSetChanged();
-            if(newQuery) lv.setSelection(0);
-            newQuery = false;
-            filter = true;
             mProgressDialog.dismiss();
+            if(results) {
+                if(cursor.getCount() < displayRows) noMore = true;
+                adapter.changeCursor(cursor);
+                adapter.notifyDataSetChanged();
+                lv.setSelection(0);
+                filter = true;
+                if(lv.getFooterViewsCount() == 0 && !(noMore && (complex || selIngredients.length == 0))) lv.addFooterView(footerView);
+                if(lv.getFooterViewsCount() > 0 && noMore && (complex || selIngredients.length == 0)) lv.removeFooterView(footerView);
+            } else Toast.makeText(SearchSimple.this, "No recipes match \""+query+"\"", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -414,6 +435,7 @@ public class SearchSimple extends ListActivity {
         getMenuInflater().inflate(R.menu.search_simple, menu);
         MenuItem item = menu.findItem(R.id.action_filter);
         final SearchView filter = (SearchView)item.getActionView();
+        filter.setFocusable(false);
         filter.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
             @Override

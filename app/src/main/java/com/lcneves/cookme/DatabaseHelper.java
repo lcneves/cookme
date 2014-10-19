@@ -77,6 +77,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return db.rawQuery("SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+RESULTS_VIEW+" LIMIT "+Integer.toString(displayRows), null);
     }
 
+    public Cursor getSimpleViewCursor(String recipeName, String[] selIngredients, int displayRows) {
+        SQLiteDatabase db=this.getReadableDatabase();
+        return db.query(recipesTable,
+                new String[] {recID, recName, recIngredients, recURL},
+                createWhereClause(recipeName, selIngredients), null, null, null,
+                "LENGTH("+DatabaseHelper.recIngredients+")", Integer.toString(displayRows));
+    }
+
+    public Cursor getFilterSimpleCursor(String recipeName, String[] selIngredients, int displayRows, String query) {
+        SQLiteDatabase db=this.getReadableDatabase();
+        return db.query(recipesTable,
+                new String[] {recID, recName, recIngredients, recURL},
+                createWhereClause(recipeName, selIngredients, query), null, null, null,
+                "LENGTH("+DatabaseHelper.recIngredients+")", Integer.toString(displayRows));
+    }
+
     public Cursor getFilterViewCursor(int displayRows, String query) {
         SQLiteDatabase db=this.getReadableDatabase();
         return db.rawQuery("SELECT "+recID+","+recName+","+recIngredients+","+recURL+" FROM "+RESULTS_VIEW+" WHERE "+recName+" LIKE '%"+query+"%' OR "+recIngredients+" LIKE '%"+query+"%' LIMIT "+Integer.toString(displayRows), null);

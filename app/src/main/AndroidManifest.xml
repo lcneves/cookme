@@ -36,6 +36,7 @@
         <activity
             android:name=".SearchSimple"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:windowSoftInputMode="stateHidden"
             android:label="@string/title_activity_search_simple"
             android:parentActivityName=".MainActivity" >
             <meta-data
