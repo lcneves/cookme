@@ -27,7 +27,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/ic_action_cancel"/>
+            android:src="@drawable/ic_action_cancel"
+            android:clickable="true"
+            android:onClick="cancelFilter"/>
         </LinearLayout>
     <!-- Main ListView
          Always give id value as list(@android:id/list)

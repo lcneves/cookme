@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
@@ -56,12 +57,17 @@ public class SearchSimple extends ListActivity {
     static String query;
     static boolean newQuery;
     View footerView;
+    LinearLayout filterLayout;
+    TextView filterTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_simple);
-        getActionBar().setDisplayShowTitleEnabled(false);
+        filterLayout = (LinearLayout) findViewById(R.id.filter_layout);
+        filterTextView = (TextView) findViewById(R.id.filter_text);
+        filterLayout.setVisibility(View.GONE);
+//        getActionBar().setDisplayShowTitleEnabled(false);
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
@@ -394,6 +400,8 @@ public class SearchSimple extends ListActivity {
         protected void onPostExecute(String result) {
             mProgressDialog.dismiss();
             if(results) {
+                filterLayout.setVisibility(View.VISIBLE);
+                filterTextView.setText("Filtering results for \""+query+"\"");
                 if(cursor.getCount() < displayRows) noMore = true;
                 adapter.changeCursor(cursor);
                 adapter.notifyDataSetChanged();
@@ -403,6 +411,14 @@ public class SearchSimple extends ListActivity {
                 if(lv.getFooterViewsCount() > 0 && noMore && (complex || selIngredients.length == 0)) lv.removeFooterView(footerView);
             } else Toast.makeText(SearchSimple.this, "No recipes match \""+query+"\"", Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void cancelFilter(View v) {
+        Intent intentReload = new Intent(this, SearchSimple.class);
+        intentReload.putExtra("com.lcneves.cookme.INGREDIENTS", selIngredients);
+        intentReload.putExtra("com.lcneves.cookme.RECIPENAME", recipeName);
+        startActivity(intentReload);
+        this.finish();
     }
 
     private class ComplexCursorAdapter extends SimpleCursorAdapter {
@@ -433,10 +449,11 @@ public class SearchSimple extends ListActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.search_simple, menu);
-        MenuItem item = menu.findItem(R.id.action_filter);
-        final SearchView filter = (SearchView)item.getActionView();
-        filter.setFocusable(false);
-        filter.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        final MenuItem searchMenuItem = menu.findItem(R.id.action_filter);
+        final SearchView filterSearchView = (SearchView)searchMenuItem.getActionView();
+        filterSearchView.setFocusable(false);
+        filterSearchView.setQueryHint("Filter results");
+        filterSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
             @Override
             public boolean onQueryTextChange(String newText) {
@@ -448,7 +465,9 @@ public class SearchSimple extends ListActivity {
                 SearchSimple.query = query.trim();
                 newQuery = true;
                 final InputMethodManager imm = (InputMethodManager) getBaseContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(filter.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                imm.hideSoftInputFromWindow(filterSearchView.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+                searchMenuItem.collapseActionView();
+                filterSearchView.setIconified(true);
                 filterResultsAction(query.trim());
                 return true;
             }
