@@ -39,6 +39,9 @@ import java.util.List;
 
 public class MainActivity extends Activity implements GestureDetector.OnGestureListener {
 
+    private final int EXPAND_DURATION = 500;
+    private boolean shoppingListExpanded;
+    private boolean isIngredients;
     DatabaseHelper db = new DatabaseHelper(this);
     static boolean databaseCheck = false;
     SimpleCursorAdapter adapter;
@@ -48,16 +51,14 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
     LinearLayout ingredientsLayout;
     static Cursor cursor;
     static Cursor cursor2;
-
     GestureDetector gestureDetector;
-    private boolean isIngredients;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db.createGroceryList();
         setContentView(R.layout.grocery_list_vertical);
-
+        shoppingListExpanded = false;
         gestureDetector = new GestureDetector(this, this);
         View shoppingHeader = findViewById(R.id.shoppingHeader);
         shoppingHeader.setOnTouchListener(new View.OnTouchListener() {
@@ -78,12 +79,12 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
         lv = (ListView) findViewById(R.id.listview);
         cursor = db.displayIngredients();
-        adapter = new SimpleCursorAdapter(MainActivity.this, R.layout.ingredients_item, cursor, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
+        adapter = new SimpleCursorAdapter(MainActivity.this, R.layout.ingredients_item, cursor, new String[] { DatabaseHelper.ING_ID, DatabaseHelper.ING_NAME}, new int[] { R.id.item0, R.id.grocery }, 0);
         lv.setAdapter(adapter);
 
         lv2 = (ListView) findViewById(R.id.listview2);
         cursor2 = db.displayShopping();
-        adapter2 = new SimpleCursorAdapter(MainActivity.this, R.layout.shopping_item, cursor2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
+        adapter2 = new SimpleCursorAdapter(MainActivity.this, R.layout.shopping_item, cursor2, new String[] { DatabaseHelper.SHO_ID, DatabaseHelper.SHO_NAME}, new int[] { R.id.item0, R.id.grocery }, 0);
         lv2.setAdapter(adapter2);
 
         // Create a ListView-specific touch listener. ListViews are given special treatment because
@@ -229,11 +230,11 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             final EditText input = (EditText) v.findViewById(R.id.editTextSearch);
             input.clearFocus();
             cursorSearch = dbSearch.displayIngredients();
-            adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
+            adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ING_ID, DatabaseHelper.ING_NAME}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch.setAdapter(adapterSearch);
             final ListView lvSearch2 = (ListView) v.findViewById(R.id.listview_shopping);
             cursorSearch2 = dbSearch.displayShopping();
-            adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
+            adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.SHO_ID, DatabaseHelper.SHO_NAME}, new int[] { R.id.item0, R.id.grocery }, 0);
             lvSearch2.setAdapter(adapterSearch2);
             Button buttonSearch = (Button)v.findViewById(R.id.search_button);
             buttonSearch.setOnClickListener(new View.OnClickListener() {
@@ -267,7 +268,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
             selectIngredients.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     String row_item;
-                    int columnIndex = cursorSearch.getColumnIndex(DatabaseHelper.ingName);
+                    int columnIndex = cursorSearch.getColumnIndex(DatabaseHelper.ING_NAME);
                     for (int i = 0; i < lvSearch.getCount(); i++) {
                         cursorSearch.moveToPosition(i);
                         row_item = cursorSearch.getString(columnIndex);
@@ -281,7 +282,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                             }
                         }
                     }
-                    adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ingID, DatabaseHelper.ingName}, new int[] { R.id.item0, R.id.grocery }, 0);
+                    adapterSearch = new MyCursorAdapter(context, R.layout.search_item, cursorSearch, new String[] { DatabaseHelper.ING_ID, DatabaseHelper.ING_NAME}, new int[] { R.id.item0, R.id.grocery }, 0);
                     adapterSearch.notifyDataSetChanged();
                     lvSearch.setAdapter(adapterSearch);
                     checkAllIngredients = !checkAllIngredients;
@@ -290,14 +291,24 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
             LinearLayout ingredientsBar = (LinearLayout)v.findViewById(R.id.ingredients_bar);
             LinearLayout shoppingBar = (LinearLayout)v.findViewById(R.id.shopping_bar);
-            if(cursorSearch.getCount() == 0) ingredientsBar.setVisibility(View.INVISIBLE);
-            if(cursorSearch2.getCount() == 0) shoppingBar.setVisibility(View.INVISIBLE);
-
+            LinearLayout spacer = (LinearLayout)v.findViewById(R.id.spacer);
+            if(cursorSearch.getCount() == 0) {
+                ingredientsBar.setVisibility(View.GONE);
+                lvSearch.setVisibility(View.GONE);
+                spacer.setVisibility(View.GONE);
+            }
+            if(cursorSearch2.getCount() == 0) {
+                shoppingBar.setVisibility(View.GONE);
+                lvSearch2.setVisibility(View.GONE);
+                spacer.setVisibility(View.GONE);
+            }
+            LinearLayout noIngredients = (LinearLayout)v.findViewById(R.id.no_ingredients_layout);
+            if(!(cursorSearch.getCount() == 0 && cursorSearch2.getCount() == 0)) noIngredients.setVisibility(View.GONE);
             ImageView selectShopping = (ImageView)v.findViewById(R.id.select_all_shopping);
             selectShopping.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     String row_item;
-                    int columnIndex = cursorSearch2.getColumnIndex(DatabaseHelper.shoName);
+                    int columnIndex = cursorSearch2.getColumnIndex(DatabaseHelper.SHO_NAME);
                     for (int i = 0; i < lvSearch2.getCount(); i++) {
                         cursorSearch2.moveToPosition(i);
                         row_item = cursorSearch2.getString(columnIndex);
@@ -311,7 +322,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                             }
                         }
                     }
-                    adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.shoID, DatabaseHelper.shoName}, new int[] { R.id.item0, R.id.grocery }, 0);
+                    adapterSearch2 = new MyCursorAdapter(context, R.layout.search_item, cursorSearch2, new String[] { DatabaseHelper.SHO_ID, DatabaseHelper.SHO_NAME}, new int[] { R.id.item0, R.id.grocery }, 0);
                     adapterSearch2.notifyDataSetChanged();
                     lvSearch2.setAdapter(adapterSearch2);
                     checkAllShopping = !checkAllShopping;
@@ -467,7 +478,7 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
 
     @Override
     public boolean onSingleTapUp(MotionEvent motionEvent) {
-        if(isIngredients) expandIngredients(null);
+        if(isIngredients || shoppingListExpanded) expandIngredients(null);
         else expandShopping(null);
         return true;
     }
@@ -597,8 +608,9 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                             val));
                 }
             });
-            anim.setDuration(500);
+            anim.setDuration(EXPAND_DURATION);
             anim.start();
+            shoppingListExpanded = false;
         }
     }
 
@@ -617,8 +629,9 @@ public class MainActivity extends Activity implements GestureDetector.OnGestureL
                             val));
                 }
             });
-            anim.setDuration(500);
+            anim.setDuration(EXPAND_DURATION);
             anim.start();
+            shoppingListExpanded = true;
         }
     }
 

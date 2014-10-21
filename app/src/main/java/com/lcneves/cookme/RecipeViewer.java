@@ -24,7 +24,6 @@ public class RecipeViewer extends Activity {
     String[] recipe;
     String name;
     String url;
-    private ShareActionProvider mShareActionProvider;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +69,7 @@ public class RecipeViewer extends Activity {
         MenuItem item = menu.findItem(R.id.menu_item_share);
 
         // Fetch and store ShareActionProvider
-        mShareActionProvider = (ShareActionProvider) item.getActionProvider();
+        ShareActionProvider mShareActionProvider = (ShareActionProvider) item.getActionProvider();
         Intent sendIntent = new Intent();
         sendIntent.setAction(Intent.ACTION_SEND);
         sendIntent.putExtra(Intent.EXTRA_TEXT, name+": "+url);

@@ -41,18 +41,18 @@ import java.util.zip.GZIPInputStream;
 
 public class JSONHelper extends Activity {
 
-    final String recName = DatabaseHelper.recName;
-    final String recIngredients = DatabaseHelper.recIngredients;
-    final String recURL = DatabaseHelper.recURL;
-    final String recipesTable = DatabaseHelper.recipesTable;
-    static final String fileNameOld = "recipeitems-latest.json";
-    static final String fileNameNew = "recipeitems-edited.json";
-    static final String fileNameGz = "recipeitems-latest.json.gz";
-    static File fileDir;
-    static File fileOld;
-    static File fileNew;
-    static File fileGz;
-    static String JSONUrl = "http://openrecipes.s3.amazonaws.com/recipeitems-latest.json.gz";
+    final String recName = DatabaseHelper.REC_NAME;
+    final String recIngredients = DatabaseHelper.REC_INGREDIENTS;
+    final String recURL = DatabaseHelper.REC_URL;
+    final String recipesTable = DatabaseHelper.RECIPES_TABLE;
+    final String FILE_NAME_OLD = "recipeitems-latest.json";
+    final String FILE_NAME_NEW = "recipeitems-edited.json";
+    final String FILE_NAME_GZ = "recipeitems-latest.json.gz";
+    File fileDir;
+    File fileOld;
+    File fileNew;
+    File fileGz;
+    final String JSON_URL = "http://openrecipes.s3.amazonaws.com/recipeitems-latest.json.gz";
     private int lineCount = 0;
     Context context = JSONHelper.this;
     ProgressDialog mProgressDialog;
@@ -84,14 +84,14 @@ public class JSONHelper extends Activity {
             }
         }
         Log.d("com.lcneves.cookme.JSONHelper", "fileDir = "+fileDir.toString());
-        fileOld = new File(fileDir, fileNameOld);
-        fileNew = new File(fileDir, fileNameNew);
-        fileGz = new File(fileDir, fileNameGz);
+        fileOld = new File(fileDir, FILE_NAME_OLD);
+        fileNew = new File(fileDir, FILE_NAME_NEW);
+        fileGz = new File(fileDir, FILE_NAME_GZ);
 
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if(cm.getActiveNetworkInfo() != null) {
             if(cm.getActiveNetworkInfo().isConnected()) {
-                downloadJSON(JSONUrl);
+                downloadJSON(JSON_URL);
             }
         } else {
             ConnectivityDialogFragment dialogConnectivity = new ConnectivityDialogFragment();

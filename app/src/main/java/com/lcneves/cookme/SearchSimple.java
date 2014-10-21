@@ -1,12 +1,8 @@
 package com.lcneves.cookme;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -18,7 +14,6 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -102,15 +97,14 @@ public class SearchSimple extends ListActivity {
 
         @Override
         protected String doInBackground(final String... args) {
-            long startTime = System.nanoTime();
             displayRows = displayRows + DISPLAY_ROWS_INCREASE;
             DatabaseHelper database = new DatabaseHelper(getApplicationContext());
             SQLiteDatabase db = database.getWritableDatabase();
 
-            cursor = db.query(DatabaseHelper.recipesTable,
-                    new String[] {DatabaseHelper.recID, DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL},
+            cursor = db.query(DatabaseHelper.RECIPES_TABLE,
+                    new String[] {DatabaseHelper.REC_ID, DatabaseHelper.REC_NAME, DatabaseHelper.REC_INGREDIENTS, DatabaseHelper.REC_URL},
                     DatabaseHelper.createWhereClause(recipeName, selIngredients), null, null, null,
-                    "LENGTH("+DatabaseHelper.recIngredients+")", Integer.toString(displayRows));
+                    "LENGTH("+DatabaseHelper.REC_INGREDIENTS +")", Integer.toString(displayRows));
 
             if(!(results = cursor.moveToFirst()) && selIngredients.length > 0) {
                 searchComplex();
@@ -139,7 +133,7 @@ public class SearchSimple extends ListActivity {
                 adapter = new ComplexCursorAdapter(activity,
                         R.layout.list_item_simple,
                         cursor,
-                        new String[]{DatabaseHelper.recName, DatabaseHelper.recIngredients, DatabaseHelper.recURL},
+                        new String[]{DatabaseHelper.REC_NAME, DatabaseHelper.REC_INGREDIENTS, DatabaseHelper.REC_URL},
                         new int[]{R.id.name, R.id.ingredients, R.id.url},
                         0);
                 setListAdapter(adapter);
@@ -176,10 +170,10 @@ public class SearchSimple extends ListActivity {
         StringBuilder sb = new StringBuilder("CREATE VIEW ");
         sb.append(DatabaseHelper.RESULTS_VIEW);
         sb.append(" AS SELECT ");
-        sb.append(DatabaseHelper.recipesTable);
+        sb.append(DatabaseHelper.RECIPES_TABLE);
         sb.append(".*,Count(r._id) as CountMatches FROM (");
 
-        final String QUERY_LIKE_STUB = "SELECT " + DatabaseHelper.recID + " FROM " + DatabaseHelper.recipesTable + " WHERE ";
+        final String QUERY_LIKE_STUB = "SELECT " + DatabaseHelper.REC_ID + " FROM " + DatabaseHelper.RECIPES_TABLE + " WHERE ";
         sb.append(QUERY_LIKE_STUB);
         sb.append(DatabaseHelper.createWhereClause(recipeName, new String[] { selIngredients[0] } ));
 
@@ -190,11 +184,11 @@ public class SearchSimple extends ListActivity {
         }
 
         sb.append(") AS r INNER JOIN ");
-        sb.append(DatabaseHelper.recipesTable);
+        sb.append(DatabaseHelper.RECIPES_TABLE);
         sb.append(" ON r._id = ");
-        sb.append(DatabaseHelper.recipesTable);
+        sb.append(DatabaseHelper.RECIPES_TABLE);
         sb.append("._id GROUP BY r._id ORDER BY CountMatches DESC, LENGTH(");
-        sb.append(DatabaseHelper.recIngredients);
+        sb.append(DatabaseHelper.REC_INGREDIENTS);
         sb.append(")");
 
         SQLiteDatabase db = database.getWritableDatabase();
@@ -210,9 +204,9 @@ public class SearchSimple extends ListActivity {
         super.onListItemClick(l, v, pos, id);
         String[] recipe = new String[3];
         cursor.moveToPosition(pos);
-        recipe[0]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recName));
-        recipe[1]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recIngredients));
-        recipe[2]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recURL));
+        recipe[0]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.REC_NAME));
+        recipe[1]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.REC_INGREDIENTS));
+        recipe[2]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.REC_URL));
         Intent intent = new Intent(this, RecipeViewer.class);
         intent.putExtra("com.lcneves.cookme.RECIPE", recipe);
         startActivity(intent);
@@ -236,9 +230,9 @@ public class SearchSimple extends ListActivity {
         int menuItemIndex = item.getItemId();
         String[] recipe = new String[3];
         cursor.moveToPosition(info.position);
-        recipe[0]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recName));
-        recipe[1]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recIngredients));
-        recipe[2]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.recURL));
+        recipe[0]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.REC_NAME));
+        recipe[1]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.REC_INGREDIENTS));
+        recipe[2]=cursor.getString(cursor.getColumnIndex(DatabaseHelper.REC_URL));
         switch (menuItemIndex) {
             case 0:
                 Intent intent = new Intent(this, RecipeViewer.class);
@@ -266,9 +260,12 @@ public class SearchSimple extends ListActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            startActivity(intent);
+            if (filter) cancelFilter(null);
+            else {
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
             return true;
         }
         return super.onKeyDown(keyCode, event);
@@ -356,38 +353,6 @@ public class SearchSimple extends ListActivity {
             if(complex) cursor = database.getFilterViewCursor(displayRows, query);
             else cursor = database.getFilterSimpleCursor(recipeName, selIngredients, displayRows, query);
             results = cursor.moveToFirst();
-            /*StringBuilder sb = new StringBuilder("CREATE VIEW ");
-            sb.append(DatabaseHelper.RESULTS_VIEW);
-            sb.append(" AS SELECT ");
-            sb.append(DatabaseHelper.recipesTable);
-            sb.append(".*,Count(r._id) as CountMatches FROM (");
-
-            final String QUERY_LIKE_STUB = "SELECT " + DatabaseHelper.recID + " FROM " + DatabaseHelper.recipesTable + " WHERE ";
-            sb.append(QUERY_LIKE_STUB);
-            if(selIngredients.length > 0) sb.append(DatabaseHelper.createWhereClause(recipeName, new String[] {selIngredients[0]}, args[0]));
-            else sb.append(DatabaseHelper.createWhereClause(recipeName, selIngredients, args[0]));
-
-            for (int i = 1; i < selIngredients.length; ++i) {
-                sb.append(" UNION ALL ");
-                sb.append(QUERY_LIKE_STUB);
-                sb.append(DatabaseHelper.createWhereClause(recipeName, new String[]{selIngredients[i]}, args[0]));
-            }
-
-            sb.append(") AS r INNER JOIN ");
-            sb.append(DatabaseHelper.recipesTable);
-            sb.append(" ON r._id = ");
-            sb.append(DatabaseHelper.recipesTable);
-            sb.append("._id GROUP BY r._id ORDER BY CountMatches DESC, LENGTH(");
-            sb.append(DatabaseHelper.recIngredients);
-            sb.append(")");
-
-            SQLiteDatabase db = database.getWritableDatabase();
-
-            db.execSQL("DROP VIEW IF EXISTS " + DatabaseHelper.RESULTS_VIEW);
-            db.execSQL(sb.toString());
-            db.close();
-            cursor = database.getResultsViewCursor(displayRows);
-            results = cursor.moveToFirst();*/
             return null;
         }
 

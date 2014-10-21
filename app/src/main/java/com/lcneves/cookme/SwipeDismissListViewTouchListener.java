@@ -1,8 +1,5 @@
 package com.lcneves.cookme;
 
-/**
- * Created by lucas on 10/2/14.
- */
 /*
  * Copyright 2013 Google Inc.
  *

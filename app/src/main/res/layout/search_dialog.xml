@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:minWidth="300dip">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="40dp"
@@ -38,6 +40,18 @@
         android:layout_height="10dp">
     </LinearLayout>
     <LinearLayout
+        android:id="@+id/no_ingredients_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="6dp"
+        android:background="#8ebfbfbf">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/no_ingredients"
+            style="@android:style/TextAppearance.Holo.Widget.TextView"/>
+    </LinearLayout>
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingLeft="3dp"
@@ -66,6 +80,7 @@
                 android:src="@drawable/ic_action_fridge"/>
         </LinearLayout>
         <LinearLayout
+            android:id="@+id/spacer"
             android:layout_width="6dp"
             android:layout_height="0dp">
         </LinearLayout>
