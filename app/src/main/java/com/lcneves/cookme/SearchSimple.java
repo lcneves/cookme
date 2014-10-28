@@ -62,7 +62,6 @@ public class SearchSimple extends ListActivity {
         filterLayout = (LinearLayout) findViewById(R.id.filter_layout);
         filterTextView = (TextView) findViewById(R.id.filter_text);
         filterLayout.setVisibility(View.GONE);
-//        getActionBar().setDisplayShowTitleEnabled(false);
         Intent intent = getIntent();
         selIngredients = intent.getStringArrayExtra("com.lcneves.cookme.INGREDIENTS");
         recipeName = intent.getStringExtra("com.lcneves.cookme.RECIPENAME");
@@ -277,14 +276,8 @@ public class SearchSimple extends ListActivity {
         mProgressDialog.setIndeterminate(true);
         mProgressDialog.setIndeterminateDrawable(getResources().getDrawable(R.drawable.progress_dialog_anim));
         mProgressDialog.setCancelable(false);
-
-        /*if(filter) {
-            final FilterResults filterResults = new FilterResults(this);
-            filterResults.execute(query);
-        } else {*/
-            final ShowMore showMore = new ShowMore(this);
-            showMore.execute();
-
+        final ShowMore showMore = new ShowMore(this);
+        showMore.execute();
     }
 
     private class ShowMore extends AsyncTask<String, Integer, String> {
@@ -442,14 +435,6 @@ public class SearchSimple extends ListActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        /*
-        if (id == R.id.action_settings) {
-            return true;
-        }*/
         return super.onOptionsItemSelected(item);
     }
 
