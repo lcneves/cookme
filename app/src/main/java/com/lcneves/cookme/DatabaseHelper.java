@@ -42,16 +42,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     public static String createWhereClause(String name, String[] ingredients, String query) {
-        StringBuilder sb = new StringBuilder(REC_NAME + " LIKE '%" + name + "%'");
-
-        if (ingredients.length > 0) {
-            sb.append(" AND (" + REC_INGREDIENTS + " LIKE '%" + ingredients[0] + "%'");
-            for (int i = 1; i < ingredients.length; ++i) sb.append(" AND " + REC_INGREDIENTS + " LIKE '%" + ingredients[i] + "%'");
-            sb.append(")");
-        }
-        sb.append(" AND (" + REC_NAME + " LIKE '%" + query + "%' OR " + REC_INGREDIENTS + " LIKE '%" + query + "%')");
-
-        return sb.toString();
+        return createWhereClause(name, ingredients)+
+                " AND (" + REC_NAME + " LIKE '%" + query + "%' OR " + REC_INGREDIENTS + " LIKE '%" + query + "%')";
     }
 
     public DatabaseHelper(Context context) {

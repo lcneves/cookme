@@ -83,20 +83,22 @@ public class JSONHelper extends Activity {
                 dialogFreeSpace.show(getFragmentManager(), "tag");
             }
         }
-        Log.d("com.lcneves.cookme.JSONHelper", "fileDir = "+fileDir.toString());
-        fileOld = new File(fileDir, FILE_NAME_OLD);
-        fileNew = new File(fileDir, FILE_NAME_NEW);
-        fileGz = new File(fileDir, FILE_NAME_GZ);
+        if(fileDir != null) {
+            fileOld = new File(fileDir, FILE_NAME_OLD);
+            fileNew = new File(fileDir, FILE_NAME_NEW);
+            fileGz = new File(fileDir, FILE_NAME_GZ);
 
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if(cm.getActiveNetworkInfo() != null) {
-            if(cm.getActiveNetworkInfo().isConnected()) {
-                downloadJSON(JSON_URL);
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if(cm.getActiveNetworkInfo() != null) {
+                if(cm.getActiveNetworkInfo().isConnected()) {
+                    downloadJSON(JSON_URL);
+                }
+            } else {
+                ConnectivityDialogFragment dialogConnectivity = new ConnectivityDialogFragment();
+                dialogConnectivity.show(getFragmentManager(), "tag");
             }
-        } else {
-            ConnectivityDialogFragment dialogConnectivity = new ConnectivityDialogFragment();
-            dialogConnectivity.show(getFragmentManager(), "tag");
         }
+
     }
 
     private void downloadJSON(String url) {
